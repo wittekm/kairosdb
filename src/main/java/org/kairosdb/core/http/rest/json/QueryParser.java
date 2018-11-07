@@ -234,12 +234,26 @@ public class QueryParser
                 if (endTime > -1)
                     queryMetric.setEndTime(endTime);
 
-                if (queryMetric.getEndTime() < startTime)
-                    throw new BeanValidationException(new SimpleConstraintViolation("end_time", "must be greater than the start time"), context);
-
                 queryMetric.setCacheString(query.getCacheString() + metric.getCacheString());
 
                 JsonObject jsMetric = metricsArray.get(I).getAsJsonObject();
+
+                JsonElement startTimeElement = jsMetric.get("start_absolute");
+                if (startTimeElement != null)     
+                {
+                    Long startTimeOverride = startTimeElement.getAsLong();
+                    queryMetric.setStartTime(startTimeOverride);
+                }
+
+                JsonElement endTimeElement = jsMetric.get("end_absolute");
+                if (endTimeElement != null) 
+                {
+                    Long endTimeOverride = endTimeElement.getAsLong();
+                    queryMetric.setEndTime(endTimeOverride);
+                }
+
+                if (queryMetric.getEndTime() < queryMetric.getStartTime())
+                    throw new BeanValidationException(new SimpleConstraintViolation("end_time", "must be greater than the start time"), context);
 
                 for (FeatureProcessingFactory<?> factory : m_processingChain.getFeatureProcessingFactories())
                 {
@@ -269,13 +283,13 @@ public class QueryParser
 
                 queryMetric.setTags(metric.getTags());
 
-				query.addQueryMetric(queryMetric);
-			}
-			catch (ContextualJsonSyntaxException e)
-			{
-				throw new BeanValidationException(new SimpleConstraintViolation(e.getContext(), e.getMessage()), context);
-			}
-		}
+                query.addQueryMetric(queryMetric);
+            }
+            catch (ContextualJsonSyntaxException e)
+            {
+                throw new BeanValidationException(new SimpleConstraintViolation(e.getContext(), e.getMessage()), context);
+            }
+        }
 
         return (query);
     }
