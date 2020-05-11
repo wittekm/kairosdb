@@ -406,7 +406,13 @@ public class KairosDatastoreTest
 		}
 
 		@Override
-		public void setValue(String service, String serviceKey, String key, String value) throws DatastoreException
+		public long queryCardinality(DatastoreMetricQuery query)
+		{
+			return 0;
+		}
+
+		@Override
+		public void setValue(String service, String serviceKey, String key, String value)
 		{
 
 		}

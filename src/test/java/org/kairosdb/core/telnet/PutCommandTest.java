@@ -397,5 +397,11 @@ public class PutCommandTest
 		{
 			return null;
 		}
+
+		@Override
+		public long queryCardinality(DatastoreMetricQuery query)
+		{
+			return 0;
+		}
 	}
 }

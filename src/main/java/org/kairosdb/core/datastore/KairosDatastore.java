@@ -30,6 +30,7 @@ import org.kairosdb.core.groupby.TagGroupBy;
 import org.kairosdb.core.groupby.TagGroupByResult;
 import org.kairosdb.core.groupby.TypeGroupByResult;
 import org.kairosdb.core.reporting.ThreadReporter;
+import org.kairosdb.datastore.h2.H2Datastore;
 import org.kairosdb.plugin.Aggregator;
 import org.kairosdb.plugin.GroupBy;
 import org.kairosdb.util.MemoryMonitor;
@@ -245,6 +246,12 @@ public class KairosDatastore
 
 		return Collections.<DataPointGroup>singletonList(new EmptyDataPointGroup(metric.getName(), tagSet));
 
+	}
+
+
+	public long queryCardinality(QueryMetric metric) throws DatastoreException
+	{
+		return m_datastore.queryCardinality(metric);
 	}
 
 	public DatastoreQuery createQuery(QueryMetric metric) throws DatastoreException
