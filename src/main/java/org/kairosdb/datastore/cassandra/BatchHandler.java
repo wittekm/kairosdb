@@ -39,8 +39,6 @@ public class BatchHandler extends RetryCallable
 	private final int m_defaultTtl;
 	private final boolean m_allignDatapointTtl;
 	private final boolean m_forceDefaultDatapointTtl;
-	private final DataCache<DataPointsRowKey> m_rowKeyCache;
-	private final DataCache<String> m_metricNameCache;
 	private final CassandraModule.CQLBatchFactory m_cqlBatchFactory;
 	private final Publisher<RowKeyEvent> m_rowKeyPublisher;
 	private final Publisher<BatchReductionEvent> m_batchReductionPublisher;
@@ -50,8 +48,6 @@ public class BatchHandler extends RetryCallable
 			@Assisted List<DataPointEvent> events,
 			@Assisted EventCompletionCallBack callBack,
 			CassandraConfiguration configuration,
-			DataCache<DataPointsRowKey> rowKeyCache,
-			DataCache<String> metricNameCache,
 			FilterEventBus eventBus,
 			CassandraModule.CQLBatchFactory cqlBatchFactory)
 	{
@@ -60,8 +56,6 @@ public class BatchHandler extends RetryCallable
 		m_defaultTtl = configuration.getDatapointTtl();
 		m_allignDatapointTtl = configuration.isAlignDatapointTtlWithTimestamp();
 		m_forceDefaultDatapointTtl = configuration.isForceDefaultDatapointTtl();
-		m_rowKeyCache = rowKeyCache;
-		m_metricNameCache = metricNameCache;
 
 		m_cqlBatchFactory = cqlBatchFactory;
 
@@ -123,30 +117,16 @@ public class BatchHandler extends RetryCallable
 			rowKey = new DataPointsRowKey(metricName, rowTime, dataPoint.getDataStoreDataType(),
 					tags);
 
-			//Write out the row key if it is not cached
-			DataPointsRowKey cachedKey = m_rowKeyCache.cacheItem(rowKey);
-			if (cachedKey == null)
+			batch.addRowKey(metricName, rowKey, rowKeyTtl);
+			m_rowKeyPublisher.post(new RowKeyEvent(metricName, rowKey, rowKeyTtl));
+
+			if (metricName.length() == 0)
 			{
-				batch.addRowKey(metricName, rowKey, rowKeyTtl);
-
-				m_rowKeyPublisher.post(new RowKeyEvent(metricName, rowKey, rowKeyTtl));
+				logger.warn(
+						"Attempted to add empty metric name to string index. Row looks like: " + dataPoint
+				);
 			}
-			else
-				rowKey = cachedKey;
-
-			//Write metric name if not in cache
-			String cachedName = m_metricNameCache.cacheItem(metricName);
-			if (cachedName == null)
-			{
-				if (metricName.length() == 0)
-				{
-					logger.warn(
-							"Attempted to add empty metric name to string index. Row looks like: " + dataPoint
-					);
-				}
-				batch.addMetricName(metricName);
-			}
-
+			batch.addMetricName(metricName);
 
 			int columnTime = getColumnName(rowTime, dataPoint.getTimestamp());
 
