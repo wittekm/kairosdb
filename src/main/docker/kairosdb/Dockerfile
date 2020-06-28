@@ -23,7 +23,7 @@ WORKDIR /opt/kairosdb
 ENV JVM_XMS="64m"
 ENV JVM_XMX="1024m"
 ENV LOGBACK_CONFIG="-Dlogback.configurationFile=/opt/kairosdb/config/logback.xml"
-ENV KAIROSDB_CONFIG="/opt/kairosdb/config/kairosdb.conf"
+ENV KAIROSDB_CONFIG="/opt/kairosdb/config/kairosdb.properties"
 ENV JAVA_OPTS=""
 
 # Build

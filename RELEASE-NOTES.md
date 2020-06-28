@@ -17,17 +17,21 @@ KairosDb Release Notes
       * `META-INF/maven/io.inscopemetrics.kairosdb/kairosdb/pom.xml`
   * Docker
       * Configuration is in `/opt/kairosdb/config` instead of `/opt/kairosdb/conf`
-      * `logback.xml` is in `/opt/kairosdb/config` instead of `/opt/kairosdb/conf/logging`
-      * Includes `kairosdb.conf` (HOCON) instead of `kairosdb.properties` (Java Properties) 
+      * `logback.xml` is in `/opt/kairosdb/config` instead of `/opt/kairosdb/conf/logging` 
       * No longer ships with `check-log-errors.sh`, `create_hbase_table.sh`, `kairosdb-service.sh` or `kairosdb.bat` in `bin`
   * Tar.gz:
       * Top level directory is no longer `kairosdb`
       * Configuration is in `./config` instead of `./kairosdb/conf`
       * `logback.xml` is in `./config` instead of `./kairosdb/conf/logging`
+      * Includes `kairosdb.properties` (Java Properties) instead of `kairosdb.properties` (HOCON) for parity with Docker image
       * No longer ships with `check-log-errors.sh`, `create_hbase_table.sh`, `kairosdb-service.sh` or `kairosdb.bat` in `bin`
    * RPM:
-      * Packaged in the same way as other Inscope Metrics services.
+      * Packaged in the same way as other Inscope Metrics services
+      * Includes `kairosdb.properties` (Java Properties) instead of `kairosdb.properties` (HOCON) for parity with Docker image
 * Other changes:
+  * Extensions should be added to `./lib/ext` regardless of distribution
+  * The packaged configuration files place H2DB files in `./h2db` instead of `build/h2db`
+  * The configuration files on the classpath during test place H2DB files in `./target/h2db` instead of `./build/h2db`
   * Log files are written to `logs` and not `log`
 
 &copy; Inscope Metrics, 2020
