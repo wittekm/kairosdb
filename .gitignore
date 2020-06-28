@@ -29,5 +29,3 @@ eclipse-bin/
 # TODO(ville): Move under target
 build/
 big_array/
-# TODO(ville): Rename to logs
-log/

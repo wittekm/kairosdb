@@ -95,7 +95,7 @@ To launch the service and its dependencies in Docker:
 
     kairosdb> ./jdk-wrapper.sh ./mvnw docker:start
 
-To launch the service with remote debugging on port 9001 and its dependencies in Docker:
+To launch the service with remote debugging on port 9005 and its dependencies in Docker:
 
     kairosdb> ./jdk-wrapper.sh ./mvnw -Ddebug=true docker:start
 

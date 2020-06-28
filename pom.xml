@@ -136,7 +136,7 @@
 
 		<!-- JVM Debug -->
 		<debugJavaOptions />
-		<debugJavaPort>9001</debugJavaPort>
+		<debugJavaPort>9005</debugJavaPort>
 
 		<!-- Docker Overrides -->
 		<skipDockerBuild>false</skipDockerBuild>
@@ -187,11 +187,26 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- Enable Inherited Plugins -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
+				<!-- TODO(ville): Fix broken/missing Javadoc -->
+				<configuration>
+					<doclint>none</doclint>
+				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<!-- TODO(ville): Relocate resources to support testing -->
+				<configuration>
+					<excludes>
+						<exclude>kairosdb.properties</exclude>
+						<exclude>logback.xml</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+			<!-- Enable Inherited Plugins -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
@@ -224,10 +239,6 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -392,16 +403,11 @@
 									<port>+cassandra.ip:7000:7000</port>
 									<port>+cassandra.ip:9042:9042</port>
 								</ports>
-								<env>
-									<ADVERTISED_HOST>${kafka.advertised.address}</ADVERTISED_HOST>
-									<ADVERTISED_PORT>9092</ADVERTISED_PORT>
-									<AUTO_CREATE_TOPICS>true</AUTO_CREATE_TOPICS>
-								</env>
 							</run>
 						</image>
 						<image>
 							<name>inscopemetrics/kairosdb:${project.version}</name>
-							<alias>mad</alias>
+							<alias>kairosdb</alias>
 							<build>
 								<dockerFile>${project.build.directory}/docker-assembly/Dockerfile</dockerFile>
 								<tags>
@@ -418,8 +424,8 @@
 									<alias>kairosdb</alias>
 								</network>
 								<ports>
-									<port>+kdb.ip:${debugJavaPort}:${debugJavaPort}</port>
-									<port>+kdb.ip:8080:8080</port>
+									<port>+kairosdb.ip:${debugJavaPort}:${debugJavaPort}</port>
+									<port>+kairosdb.ip:8080:8080</port>
 								</ports>
 								<env>
 									<JAVA_OPTS>${debugJavaOptions}</JAVA_OPTS>
