@@ -2,7 +2,7 @@
 Logging
 ============
 
-KairosDB create it's log files in ``/opt/kairosdb/logs/``. It works in a daily basis, so every day a new log is created and named as **kairosdb.log**; when the next day comes *kairosdb.log* is compressed and renamed to *kairosdb.<YYYY-MM-DD>.log*, where <YYYY-MM-DD> is the date when this specific log file was created.
+KairosDB create it's log files in ``/opt/kairosdb/log/``. It works in a daily basis, so every day a new log is created and named as **kairosdb.log**; when the next day comes *kairosdb.log* is compressed and renamed to *kairosdb.<YYYY-MM-DD>.log*, where <YYYY-MM-DD> is the date when this specific log file was created. 
 
 Starting from KairosDB 1.1.2, a more robust logging system will be used. From this version, KairosDB will compress logs everyday in order to minimize the space used for log files. Also, every time a log file reaches 100mb, it will be compressed and a new one will be generated for the same day (until the end of the day, when a new log file will be generated too).
 

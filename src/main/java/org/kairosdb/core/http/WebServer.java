@@ -27,7 +27,6 @@ import org.eclipse.jetty.security.authentication.BasicAuthenticator;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.DefaultHandler;
-import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.ssl.SslSelectChannelConnector;
@@ -70,7 +69,6 @@ public class WebServer implements KairosDBService
 	public static final String JETTY_THREADS_MIN_PROPERTY = "kairosdb.jetty.threads.min";
 	public static final String JETTY_THREADS_MAX_PROPERTY = "kairosdb.jetty.threads.max";
 	public static final String JETTY_THREADS_KEEP_ALIVE_MS_PROPERTY = "kairosdb.jetty.threads.keep_alive_ms";
-	public static final String JETTY_SHOW_STACKTRACE = "kairosdb.jetty.show_stacktrace";
 
 	private InetAddress m_address;
 	private int m_port;
@@ -84,8 +82,6 @@ public class WebServer implements KairosDBService
 	private String m_keyStorePath;
 	private String m_keyStorePassword;
 	private ExecutorThreadPool m_pool;
-	private boolean m_showStacktrace;
-
 
 	public WebServer(int port, String webRoot)
 			throws UnknownHostException
@@ -147,11 +143,6 @@ public class WebServer implements KairosDBService
 		m_pool = new ExecutorThreadPool(minThreads, maxThreads, keepAliveMs, TimeUnit.MILLISECONDS, queue);
 	}
 
-	@Inject
-	public void setJettyShowStacktrace(@Named(JETTY_SHOW_STACKTRACE) boolean showStacktrace) {
-		m_showStacktrace = showStacktrace;
-	}
-
 	@Override
 	public void start() throws KairosDBException
 	{
@@ -164,11 +155,6 @@ public class WebServer implements KairosDBService
 
 			if (m_pool != null)
 				m_server.setThreadPool(m_pool);
-
-			//Error handler
-			ErrorHandler errorHandler = new ErrorHandler();
-			errorHandler.setShowStacks(m_showStacktrace);
-			m_server.addBean(errorHandler);
 
 			//Set up SSL
 			if (m_keyStorePath != null && !m_keyStorePath.isEmpty())

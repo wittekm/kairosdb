@@ -7,7 +7,7 @@ import java.nio.channels.FileChannel;
 /**
  Created by bhawkins on 12/10/13.
  */
-public class BufferedDataInputStream extends KDataInputStream
+public class BufferedDataInputStream extends DataInputStream
 {
 	/**
 	 @param file

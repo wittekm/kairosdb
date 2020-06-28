@@ -4,8 +4,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import org.kairosdb.core.datastore.Datastore;
 import org.kairosdb.core.datastore.ServiceKeyStore;
-import org.kairosdb.util.DiskUtils;
-import org.kairosdb.util.DiskUtilsImpl;
+
+import javax.validation.constraints.Null;
+import javax.xml.ws.Service;
 
 /**
  Created with IntelliJ IDEA.
@@ -22,9 +23,6 @@ public class RemoteModule extends AbstractModule
 		bind(Datastore.class).to(RemoteDatastore.class).in(Scopes.SINGLETON);
 		bind(RemoteDatastore.class).in(Scopes.SINGLETON);
 		bind(RemoteSendJob.class).in(Scopes.SINGLETON);
-		bind(RemoteDatastoreHealthCheck.class).in(Scopes.SINGLETON);
 		bind(ServiceKeyStore.class).to(NullServiceKeyStore.class);
-		bind(DiskUtils.class).to(DiskUtilsImpl.class);
-		bind(RemoteHost.class).to(RemoteHostImpl.class);
 	}
 }

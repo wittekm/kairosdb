@@ -1,11 +1,12 @@
 package org.kairosdb.eventbus;
 
 import com.google.common.collect.ImmutableSet;
-import org.kairosdb.core.KairosRootConfig;
+import org.kairosdb.eventbus.Subscribe;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Iterator;
+import java.util.Properties;
 
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.fail;
@@ -22,7 +23,7 @@ public class PipelineRegistryTest
 	@Before
 	public void setup()
 	{
-		registry = new PipelineRegistry(new FilterEventBus(new EventBusConfiguration(new KairosRootConfig())));
+		registry = new PipelineRegistry(new FilterEventBus(new EventBusConfiguration(new Properties())));
 	}
 
 	@Test

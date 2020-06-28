@@ -2,7 +2,6 @@ package org.kairosdb.core.datapoints;
 
 import com.google.gson.JsonElement;
 import org.kairosdb.core.DataPoint;
-import org.kairosdb.util.KDataInput;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -69,7 +68,7 @@ public class LongDataPointFactoryImpl implements LongDataPointFactory
 	}
 
 	@Override
-	public DataPoint getDataPoint(long timestamp, KDataInput buffer) throws IOException
+	public DataPoint getDataPoint(long timestamp, DataInput buffer) throws IOException
 	{
 		return getFromByteBuffer(timestamp, buffer);
 	}

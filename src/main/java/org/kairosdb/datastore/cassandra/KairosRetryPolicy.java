@@ -38,14 +38,10 @@ public class KairosRetryPolicy implements RetryPolicy, KairosMetricReporter
 	private String m_hostName = "localhost";
 
 	@Inject
-	@Named("cluster_name")
-	private String m_clusterName = "cluster_name";
-
-	@Inject
 	private LongDataPointFactory m_longDataPointFactory = new LongDataPointFactoryImpl();
 
 	@Inject
-	public KairosRetryPolicy(@Named("request_retry_count") int retryCount)
+	public KairosRetryPolicy(@Named("kairosdb.datastore.cassandra.request_retry_count") int retryCount)
 	{
 		m_retryCount = retryCount;
 	}
@@ -121,7 +117,6 @@ public class KairosRetryPolicy implements RetryPolicy, KairosMetricReporter
 
 		Map<String, String> tags = new HashMap<>();
 		tags.put("host", m_hostName);
-		tags.put("cluster", m_clusterName);
 
 		tags.put("retry_type", "read_timeout");
 		ret.add(new DataPointSet("kairosdb.datastore.cassandra.retry_count", tags,

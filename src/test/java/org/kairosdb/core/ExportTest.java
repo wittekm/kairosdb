@@ -19,7 +19,6 @@ package org.kairosdb.core;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import org.h2.store.fs.FileUtils;
 import org.json.JSONException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -65,7 +64,7 @@ public class ExportTest
 	@BeforeClass
 	public static void setup()
 	{
-		new File("target").mkdir();
+		new File("build").mkdir();
 	}
 
 	private static void loadData(int port) throws IOException, InterruptedException
@@ -96,7 +95,6 @@ public class ExportTest
 
 		//Ensure the memory queue processor is used
 		System.setProperty("kairosdb.queue_processor.class", "org.kairosdb.core.queue.MemoryQueueProcessor");
-		System.setProperty("kairosdb.hostname", "ExportText");
 		s_main = new Main(props);
 		s_main.startServices();
 		s_injector = s_main.getInjector();
@@ -132,8 +130,7 @@ public class ExportTest
 	{
 		verifyDataPoints();
 
-		FileUtils.delete("target/export.json");
-		Writer ps = new OutputStreamWriter(new FileOutputStream("target/export.json"), "UTF-8");
+		Writer ps = new OutputStreamWriter(new FileOutputStream("build/export.json"), "UTF-8");
 		s_main.runExport(ps, Collections.singletonList(METRIC_NAME));
 		ps.flush();
 		ps.close();
@@ -155,7 +152,7 @@ public class ExportTest
 
 		query.close();
 
-		InputStream export = new FileInputStream("target/export.json");
+		InputStream export = new FileInputStream("build/export.json");
 
 		s_main.runImport(export);
 

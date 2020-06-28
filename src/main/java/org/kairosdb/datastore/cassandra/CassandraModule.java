@@ -17,35 +17,25 @@
 package org.kairosdb.datastore.cassandra;
 
 import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.Session;
 import com.datastax.driver.core.policies.LoadBalancingPolicy;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.SetMultimap;
-import com.google.inject.AbstractModule;
-import com.google.inject.Binder;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Scopes;
-import com.google.inject.Singleton;
-import com.google.inject.TypeLiteral;
-import com.google.inject.assistedinject.Assisted;
+import com.datastax.driver.core.policies.RetryPolicy;
+import com.google.inject.*;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
-import org.kairosdb.core.KairosRootConfig;
 import org.kairosdb.core.DataPoint;
 import org.kairosdb.core.datastore.Datastore;
 import org.kairosdb.core.datastore.ServiceKeyStore;
-import org.kairosdb.core.exception.DatastoreException;
 import org.kairosdb.core.queue.EventCompletionCallBack;
 import org.kairosdb.events.DataPointEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Named;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.SortedMap;
 
 public class CassandraModule extends AbstractModule
@@ -58,17 +48,25 @@ public class CassandraModule extends AbstractModule
 	public static final String HECTOR_PREFIX = "kairosdb.datastore.cassandra.hector.";
 
 	private Map<String, String> m_authMap = new HashMap<String, String>();
+	private Map<String, Object> m_hectorMap = new HashMap<String, Object>();
 
-	public CassandraModule(KairosRootConfig props)
+	public CassandraModule(Properties props)
 	{
-		for (String key : props)
+		for (Object key : props.keySet())
 		{
-			if (key.startsWith(AUTH_PREFIX))
+			String strKey = (String)key;
+
+			if (strKey.startsWith(AUTH_PREFIX))
 			{
-				String consumerKey = key.substring(AUTH_PREFIX.length());
-				String consumerToken = props.getProperty(key);
+				String consumerKey = strKey.substring(AUTH_PREFIX.length());
+				String consumerToken = (String)props.get(key);
 
 				m_authMap.put(consumerKey, consumerToken);
+			}
+			else if (strKey.startsWith(HECTOR_PREFIX))
+			{
+				String configKey = strKey.substring(HECTOR_PREFIX.length());
+				m_hectorMap.put(configKey, props.get(key));
 			}
 		}
 	}
@@ -83,8 +81,9 @@ public class CassandraModule extends AbstractModule
 		bind(CleanRowKeyCache.class).in(Scopes.SINGLETON);
 		bind(CassandraConfiguration.class).in(Scopes.SINGLETON);
 		//bind(CassandraClient.class).to(CassandraClientImpl.class);
-		//bind(CassandraClientImpl.class).in(Scopes.SINGLETON);
+		bind(CassandraClientImpl.class).in(Scopes.SINGLETON);
 		bind(BatchStats.class).in(Scopes.SINGLETON);
+		bind(RetryPolicy.class).to(KairosRetryPolicy.class);
 
 		bind(new TypeLiteral<Map<String, String>>(){}).annotatedWith(Names.named(CASSANDRA_AUTH_MAP))
 				.toInstance(m_authMap);
@@ -98,148 +97,67 @@ public class CassandraModule extends AbstractModule
 		install(new FactoryModuleBuilder().build(DeleteBatchHandlerFactory.class));
 
 		install(new FactoryModuleBuilder().build(CQLBatchFactory.class));
-
-		install(new FactoryModuleBuilder().build(CQLFilteredRowKeyIteratorFactory.class));
 	}
 
-	/*@Provides
+	@Provides
 	@Named("keyspace")
 	String getKeyspace(CassandraConfiguration configuration)
 	{
 		return configuration.getKeyspaceName();
-	}*/
-
-	/**
-	 Bind classes that are specific to the cluster connection
-	 @param binder
-	 @param config
-	 */
-	private void bindCassandraClient(Binder binder, ClusterConfiguration config)
-	{
-		binder.bind(ClusterConfiguration.class).toInstance(config);
-		binder.bind(CassandraClient.class).to(CassandraClientImpl.class);
-		binder.bindConstant().annotatedWith(Names.named("request_retry_count")).to(config.getRequestRetryCount());
-		binder.bindConstant().annotatedWith(Names.named("cluster_name")).to(config.getClusterName());
-		binder.bind(KairosRetryPolicy.class);
-	}
-
-	private ClusterConnection m_writeCluster;
-	private ClusterConnection m_metaCluster;
-
-	private void createClients(CassandraConfiguration configuration, Injector injector)
-	{
-		if (m_metaCluster != null)
-			return;
-
-		ClusterConfiguration writeConfig = configuration.getWriteCluster();
-		ClusterConfiguration metaConfig = configuration.getMetaCluster();
-
-		Injector writeInjector = injector.createChildInjector((Module) binder -> bindCassandraClient(binder, writeConfig) );
-
-		CassandraClient writeClient = writeInjector.getInstance(CassandraClient.class);
-
-		if (writeConfig == metaConfig) //No separate meta cluster configuration
-		{
-			m_metaCluster = m_writeCluster = new ClusterConnection(writeClient, EnumSet.of(
-					ClusterConnection.Type.WRITE, ClusterConnection.Type.META));
-		}
-		else
-		{
-			m_writeCluster = new ClusterConnection(writeClient, EnumSet.of(
-					ClusterConnection.Type.WRITE));
-
-			Injector metaInjector = injector.createChildInjector((Module) binder -> bindCassandraClient(binder, metaConfig) );
-
-			CassandraClient metaClient = metaInjector.getInstance(CassandraClient.class);
-
-			m_metaCluster = new ClusterConnection(metaClient, EnumSet.of(
-					ClusterConnection.Type.META));
-		}
 	}
 
 	@Provides
 	@Singleton
-	@Named("write_cluster")
-	ClusterConnection getWriteCluster(CassandraConfiguration configuration, Injector injector)
+	CassandraClient getCassandraClient(CassandraConfiguration configuration, Injector injector)
 	{
 		try
 		{
-			createClients(configuration, injector);
-			return m_writeCluster;
+			CassandraClientImpl client = injector.getInstance(CassandraClientImpl.class);
+			client.init();
+			return client;
 		}
 		catch (Exception e)
 		{
-			logger.error("Error building write cluster", e);
-			throw e;
-		}
-
-
-	}
-
-	@Provides
-	@Singleton
-	@Named("meta_cluster")
-	ClusterConnection getMetaCluster(CassandraConfiguration configuration, Injector injector)
-			throws Exception
-	{
-		try
-		{
-			createClients(configuration, injector);
-			return m_metaCluster;
-		}
-		catch (Exception e)
-		{
-			logger.error("Error building meta cluster", e);
+			logger.error("Unable to setup cassandra connection to cluster", e);
 			throw e;
 		}
 	}
 
 	@Provides
 	@Singleton
-	List<ClusterConnection> getReadClusters(CassandraConfiguration configuration, Injector injector)
+	Schema getCassandraSchema(CassandraClient cassandraClient, CassandraConfiguration configuration)
 	{
-		ImmutableList.Builder<ClusterConnection> clusters = new ImmutableList.Builder<>();
-
 		try
 		{
-			for (ClusterConfiguration clusterConfiguration : configuration.getReadClusters())
-			{
-				Injector readInjector = injector.createChildInjector((Module) binder -> bindCassandraClient(binder, clusterConfiguration) );
-
-				CassandraClient client = readInjector.getInstance(CassandraClient.class);
-
-				clusters.add(new ClusterConnection(client, EnumSet.of(ClusterConnection.Type.READ)));
-			}
+			return new Schema(cassandraClient, configuration.isCreateSchema());
 		}
 		catch (Exception e)
 		{
-			logger.error("Error building read cluster", e);
+			logger.error("Unable to setup cassandra schema", e);
 			throw e;
 		}
-
-		return clusters.build();
 	}
 
 	@Provides
 	@Singleton
-	LoadBalancingPolicy getLoadBalancingPolicy(@Named("write_cluster")ClusterConnection connection)
+	LoadBalancingPolicy getLoadBalancingPolicy(CassandraClient cassandraClient)
 	{
-		return connection.getLoadBalancingPolicy();
+		return cassandraClient.getWriteLoadBalancingPolicy();
 	}
 
 	@Provides
 	@Singleton
 	ConsistencyLevel getWriteConsistencyLevel(CassandraConfiguration configuration)
 	{
-		return configuration.getWriteCluster().getWriteConsistencyLevel();
+		return configuration.getDataWriteLevel();
 	}
 
-	/*@Provides
+	@Provides
 	@Singleton
-	Session getCassandraSession(ClusterConnection clusterConnection)
+	Session getCassandraSession(Schema schema)
 	{
-		return clusterConnection.getSession();
-	}*/
+		return schema.getSession();
+	}
 
 
 	@Provides
@@ -271,15 +189,6 @@ public class CassandraModule extends AbstractModule
 	public interface CQLBatchFactory
 	{
 		CQLBatch create();
-	}
-
-	public interface CQLFilteredRowKeyIteratorFactory
-	{
-		CQLFilteredRowKeyIterator create(ClusterConnection cluster,
-				String metricName,
-				@Assisted("startTime") long startTime,
-				@Assisted("endTime") long endTime,
-				SetMultimap<String, String> filterTags) throws DatastoreException;
 	}
 
 

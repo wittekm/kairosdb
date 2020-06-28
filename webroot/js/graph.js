@@ -188,7 +188,7 @@ function buildKairosDBQuery() {
 				}
 				var align = $(aggregator).find(".aggregatorAlign").val();
 
-				var agg = metric.addRangeAggregator(name, value, unit, time_zone, align);
+				var agg = metric.addRangeAggregator(name, value, unit, percentile, time_zone, align);
 				agg.return_type = $(aggregator).find(".aggregatorDevValue").val();
 			}
 			else if (name == 'save_as')
@@ -660,7 +660,6 @@ function addAggregator(container) {
 		else if (name == "percentile") {
 			$aggregatorContainer.find(".aggregatorPercentile").show().css('display', 'table-cell');
 			$aggregatorContainer.find(".aggregatorSamplingUnit").show();
-			$aggregatorContainer.find(".aggregatorSampling").show();
 			$aggregatorContainer.find(".aggregatorAlign").show();
 		}
 		else if (name == "div") {

@@ -20,7 +20,6 @@ import org.kairosdb.core.DataPoint;
 import org.kairosdb.core.KairosDataPointFactory;
 import org.kairosdb.core.datapoints.DataPointFactory;
 import org.kairosdb.core.datastore.DataPointGroup;
-import org.kairosdb.util.KDataInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,11 +148,11 @@ public class Group
 	private class CachedDataPointGroup implements DataPointGroup
 	{
 		private int m_readCount = 0; //number of datapoints read from file
-		private KDataInputStream m_dataInputStream;
+		private DataInputStream m_dataInputStream;
 
 		private CachedDataPointGroup() throws IOException
 		{
-			m_dataInputStream = new KDataInputStream(new BufferedInputStream(
+			m_dataInputStream = new DataInputStream(new BufferedInputStream(
 					new FileInputStream(m_groupCacheFile)));
 		}
 

@@ -26,8 +26,6 @@ package org.kairosdb.util;
 public class MemoryMonitorException extends RuntimeException
 {
 
-	private static final long serialVersionUID = -3536707538872036771L;
-
 	public String getMessage()
 	{
 		return ("Insufficient memory to perform request");

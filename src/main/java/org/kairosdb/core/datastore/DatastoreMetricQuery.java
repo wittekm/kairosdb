@@ -25,8 +25,6 @@ public interface DatastoreMetricQuery extends PluggableQuery
 
 	SetMultimap<String, String> getTags();
 
-	boolean isExplicitTags();
-
 	long getStartTime();
 
 	long getEndTime();

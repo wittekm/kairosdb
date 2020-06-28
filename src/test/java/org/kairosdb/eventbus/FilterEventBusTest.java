@@ -1,7 +1,9 @@
 package org.kairosdb.eventbus;
 
-import org.kairosdb.core.KairosRootConfig;
+import org.kairosdb.eventbus.Subscribe;
 import org.junit.Test;
+
+import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -20,7 +22,7 @@ public class FilterEventBusTest
 		Subscriber subscriber1 = new Subscriber();
 		Subscriber subscriber2 = new Subscriber();
 		Subscriber subscriber3 = new Subscriber();
-		EventBusConfiguration config = new EventBusConfiguration(new KairosRootConfig());
+		EventBusConfiguration config = new EventBusConfiguration(new Properties());
 		FilterEventBus eventBus = new FilterEventBus(config);
 
 		eventBus.register(subscriber1);
@@ -40,7 +42,7 @@ public class FilterEventBusTest
 		Subscriber subscriber2 = new Subscriber();
 		Subscriber subscriber3 = new Subscriber();
 		FilterSubscriber filter = new FilterSubscriber("Bye");
-		EventBusConfiguration config = new EventBusConfiguration(new KairosRootConfig());
+		EventBusConfiguration config = new EventBusConfiguration(new Properties());
 		FilterEventBus eventBus = new FilterEventBus(config);
 
 		eventBus.register(subscriber1, 1);

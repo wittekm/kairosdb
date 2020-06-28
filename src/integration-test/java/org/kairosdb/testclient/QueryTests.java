@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package org.kairosdb.integration;
+package org.kairosdb.testclient;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
@@ -58,15 +58,17 @@ List of tests we need to perform
 6. Test group by
  */
 
-public class QueryIT
+public class QueryTests
 {
 	private JsonParser m_parser = new JsonParser();
 	private String m_host = "127.0.0.1";
 	private String m_port = "8080";
 
-	public QueryIT()
+	@Parameters({"host", "port"})
+	public QueryTests(String host, String port)
 	{
-		m_host = System.getProperty("dockerHostAddress", m_host);
+		m_host = host;
+		m_port = port;
 	}
 
 	private JsonElement readJsonFromStream(String path, String metricName) throws IOException, JSONException

@@ -19,8 +19,6 @@ package org.kairosdb.util;
 public class ValidationException extends Exception
 
 {
-	private static final long serialVersionUID = -3497948727182294016L;
-
 	public ValidationException(String message)
 	{
 		super(message);

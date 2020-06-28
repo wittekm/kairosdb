@@ -6,14 +6,15 @@
 
 package org.kairosdb.core.reporting;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import org.kairosdb.core.DataPointSet;
 import org.kairosdb.core.KairosDBService;
-import org.kairosdb.core.datapoints.LongDataPointFactory;
-import org.kairosdb.core.datapoints.LongDataPointFactoryImpl;
 import org.kairosdb.core.exception.KairosDBException;
 import org.kairosdb.eventbus.Subscribe;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import org.kairosdb.core.DataPoint;
+import org.kairosdb.core.DataPointSet;
+import org.kairosdb.core.datapoints.LongDataPointFactory;
+import org.kairosdb.core.datapoints.LongDataPointFactoryImpl;
 import org.kairosdb.events.DataPointEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -79,6 +81,7 @@ public class DataPointsMonitor implements KairosMetricReporter, KairosDBService
 		for (String name : counters.keySet())
 		{
 			DataPointSet dps = new DataPointSet(METRIC_NAME);
+			dps.addTag("host", m_hostName);
 			dps.addTag("metric_name", name);
 			dps.addDataPoint(m_dataPointFactory.createDataPoint(now, counters.get(name).longValue()));
 

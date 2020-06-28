@@ -1,7 +1,11 @@
 package org.kairosdb.core.http.rest;
 
 
-import com.google.inject.*;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.google.inject.spi.InjectionListener;
@@ -12,10 +16,24 @@ import org.junit.BeforeClass;
 import org.kairosdb.core.GuiceKairosDataPointFactory;
 import org.kairosdb.core.KairosDataPointFactory;
 import org.kairosdb.core.KairosFeatureProcessor;
-import org.kairosdb.core.KairosRootConfig;
 import org.kairosdb.core.aggregator.TestAggregatorFactory;
-import org.kairosdb.core.datapoints.*;
-import org.kairosdb.core.datastore.*;
+import org.kairosdb.core.datapoints.DoubleDataPoint;
+import org.kairosdb.core.datapoints.DoubleDataPointFactory;
+import org.kairosdb.core.datapoints.DoubleDataPointFactoryImpl;
+import org.kairosdb.core.datapoints.LegacyDataPointFactory;
+import org.kairosdb.core.datapoints.LongDataPoint;
+import org.kairosdb.core.datapoints.LongDataPointFactory;
+import org.kairosdb.core.datapoints.LongDataPointFactoryImpl;
+import org.kairosdb.core.datapoints.StringDataPointFactory;
+import org.kairosdb.core.datastore.Datastore;
+import org.kairosdb.core.datastore.DatastoreMetricQuery;
+import org.kairosdb.core.datastore.KairosDatastore;
+import org.kairosdb.core.datastore.QueryCallback;
+import org.kairosdb.core.datastore.QueryPluginFactory;
+import org.kairosdb.core.datastore.QueryQueuingManager;
+import org.kairosdb.core.datastore.ServiceKeyStore;
+import org.kairosdb.core.datastore.ServiceKeyValue;
+import org.kairosdb.core.datastore.TagSet;
 import org.kairosdb.core.exception.DatastoreException;
 import org.kairosdb.core.groupby.TestGroupByFactory;
 import org.kairosdb.core.http.WebServer;
@@ -34,11 +52,20 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public abstract class ResourceBase
 {
-    private static final FilterEventBus eventBus = new FilterEventBus(new EventBusConfiguration(new KairosRootConfig()));
+    private static final FilterEventBus eventBus = new FilterEventBus(new EventBusConfiguration(new Properties()));
     private static WebServer server;
 
     static QueryQueuingManager queuingManager;
@@ -56,7 +83,7 @@ public abstract class ResourceBase
         datastore = new TestDatastore();
         queuingManager = new QueryQueuingManager(3, "localhost");
 
-        Injector injector = Guice.createInjector(new WebServletModule(new KairosRootConfig()), new AbstractModule()
+        Injector injector = Guice.createInjector(new WebServletModule(new Properties()), new AbstractModule()
         {
             @Override
             protected void configure()
@@ -67,13 +94,18 @@ public abstract class ResourceBase
                 {
                     public <I> void hear(TypeLiteral<I> typeLiteral, TypeEncounter<I> typeEncounter)
                     {
-                        typeEncounter.register((InjectionListener<I>) i -> eventBus.register(i));
+                        typeEncounter.register(new InjectionListener<I>()
+                        {
+                            public void afterInjection(I i)
+                            {
+                                eventBus.register(i);
+                            }
+                        });
                     }
                 });
                 bind(String.class).annotatedWith(Names.named(WebServer.JETTY_ADDRESS_PROPERTY)).toInstance("0.0.0.0");
                 bind(Integer.class).annotatedWith(Names.named(WebServer.JETTY_PORT_PROPERTY)).toInstance(9001);
                 bind(String.class).annotatedWith(Names.named(WebServer.JETTY_WEB_ROOT_PROPERTY)).toInstance("bogus");
-                bind(Boolean.class).annotatedWith(Names.named(WebServer.JETTY_SHOW_STACKTRACE)).toInstance(Boolean.FALSE);
                 bind(Datastore.class).toInstance(datastore);
                 bind(ServiceKeyStore.class).toInstance(datastore);
                 bind(KairosDatastore.class).in(Singleton.class);
@@ -90,12 +122,11 @@ public abstract class ResourceBase
                 bind(SimpleStatsReporter.class);
                 bind(String.class).annotatedWith(Names.named("kairosdb.server.type")).toInstance("ALL");
 
-                KairosRootConfig props = new KairosRootConfig();
-                String configFileName = "kairosdb.properties";
-                InputStream is = getClass().getClassLoader().getResourceAsStream(configFileName);
+                Properties props = new Properties();
+                InputStream is = getClass().getClassLoader().getResourceAsStream("kairosdb.properties");
                 try
                 {
-                    props.load(is, KairosRootConfig.ConfigFormat.fromFileName(configFileName));
+                    props.load(is);
                     is.close();
                 }
                 catch (IOException e)
@@ -104,7 +135,7 @@ public abstract class ResourceBase
                 }
 
                 //Names.bindProperties(binder(), props);
-                bind(KairosRootConfig.class).toInstance(props);
+                bind(Properties.class).toInstance(props);
 
                 bind(DoubleDataPointFactory.class)
                         .to(DoubleDataPointFactoryImpl.class).in(Singleton.class);
@@ -118,11 +149,9 @@ public abstract class ResourceBase
                 bind(StringDataPointFactory.class).in(Singleton.class);
 
                 bind(QueryPreProcessorContainer.class).to(GuiceQueryPreProcessor.class).in(javax.inject.Singleton.class);
+
             }
         });
-        KairosDatastore kairosDatastore = injector.getInstance(KairosDatastore.class);
-        kairosDatastore.init();
-
         server = injector.getInstance(WebServer.class);
         server.start();
 
@@ -131,7 +160,7 @@ public abstract class ResourceBase
     }
 
     @AfterClass
-    public static void tearDown()
+    public static void tearDown() throws Exception
     {
         if (server != null)
         {
@@ -144,7 +173,7 @@ public abstract class ResourceBase
         private DatastoreException m_toThrow = null;
         private Map<String, String> metadata = new TreeMap<>();
 
-        TestDatastore()
+        TestDatastore() throws DatastoreException
         {
         }
 
@@ -154,7 +183,7 @@ public abstract class ResourceBase
         }
 
         @Override
-        public void close()
+        public void close() throws InterruptedException
         {
         }
 
@@ -214,12 +243,12 @@ public abstract class ResourceBase
         }
 
         @Override
-        public void deleteDataPoints(DatastoreMetricQuery deleteQuery)
+        public void deleteDataPoints(DatastoreMetricQuery deleteQuery) throws DatastoreException
         {
         }
 
         @Override
-        public TagSet queryMetricTags(DatastoreMetricQuery query)
+        public TagSet queryMetricTags(DatastoreMetricQuery query) throws DatastoreException
         {
             return null;
         }
@@ -307,6 +336,7 @@ public abstract class ResourceBase
 
         @Override
         public Date getServiceKeyLastModifiedTime(String service, String serviceKey)
+                throws DatastoreException
         {
             return null;
         }

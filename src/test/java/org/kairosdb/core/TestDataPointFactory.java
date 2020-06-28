@@ -2,9 +2,10 @@ package org.kairosdb.core;
 
 import com.google.gson.JsonElement;
 import org.kairosdb.core.datapoints.*;
-import org.kairosdb.util.KDataInput;
 
+import java.io.DataInput;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,7 +46,7 @@ public class TestDataPointFactory implements KairosDataPointFactory
 	}
 
 	@Override
-	public DataPoint createDataPoint(String type, long timestamp, KDataInput buffer) throws IOException
+	public DataPoint createDataPoint(String type, long timestamp, DataInput buffer) throws IOException
 	{
 		DataPointFactory factory = m_factoryMapDataStore.get(type);
 

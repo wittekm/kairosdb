@@ -17,46 +17,34 @@ package org.kairosdb.core.telnet;
 
 import org.junit.Test;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.Assert.assertArrayEquals;
 
 public class WordSplitterTest
 {
 	@Test
 	public void test()
 	{
-		assertThat(WordSplitter.splitString("simple white space string"))
-				.containsExactly("simple", "white", "space", "string");
-		assertThat(WordSplitter.splitString("uses\ttab\tseparators"))
-				.containsExactly("uses", "tab", "separators");
-		assertThat(WordSplitter.splitString("")) // empty string
-				.containsExactly();
-		assertThat(WordSplitter.splitString("  \t  \t"))  // only spaces
-				.containsExactly();
-		assertThat(WordSplitter.splitString("multiple \tinterstitial\t space \t chars"))
-				.containsExactly("multiple", "interstitial", "space", "chars");
-		assertThat(WordSplitter.splitString("  space at start"))
-				.containsExactly("space", "at", "start");
-		assertThat(WordSplitter.splitString("space at end  "))
-				.containsExactly("space", "at", "end");
-		assertThat(WordSplitter.splitString("  space at start and end  "))
-				.containsExactly("space", "at", "start", "and", "end");
-		assertThat(WordSplitter.splitString("nospace"))
-				.containsExactly("nospace");
-
-		assertThat(WordSplitter.splitString("\"quoted space\""))
-				.containsExactly("quoted space");
-
-		assertThat(WordSplitter.splitString("\"quoted space\" at the begining"))
-				.containsExactly("quoted space", "at", "the", "begining");
-
-		assertThat(WordSplitter.splitString("quoted space at \"the end\""))
-				.containsExactly("quoted", "space", "at", "the end");
-
-		assertThat(WordSplitter.splitString("quoted string \"with\"in\" it"))
-				.containsExactly("quoted", "string", "with\"in", "it");
+		assertArrayEquals(new String[]{"simple", "white", "space", "string"},
+		                  WordSplitter.splitString("simple white space string"));
+		assertArrayEquals(new String[]{"uses", "tab", "separators"},
+		                  WordSplitter.splitString("uses\ttab\tseparators"));
+		assertArrayEquals(new String[]{},
+		                  WordSplitter.splitString(""));  // empty string
+		assertArrayEquals(new String[]{},
+		                  WordSplitter.splitString("  \t  \t"));  // only spaces
+		assertArrayEquals(new String[]{"multiple", "interstitial", "space", "chars"},
+		                  WordSplitter.splitString("multiple \tinterstitial\t space \t chars"));
+		assertArrayEquals(new String[]{"space", "at", "start"},
+		                  WordSplitter.splitString("  space at start"));
+		assertArrayEquals(new String[]{"space", "at", "end"},
+		                  WordSplitter.splitString("space at end  "));
+		assertArrayEquals(new String[]{"space", "at", "start", "and", "end"},
+		                  WordSplitter.splitString("  space at start and end  "));
+		assertArrayEquals(new String[]{"nospace"},
+		                  WordSplitter.splitString("nospace"));
 	}
 
-	@Test
+	/*@Test
 	public void speedTest()
 	{
 		long start = System.currentTimeMillis();
@@ -67,5 +55,5 @@ public class WordSplitterTest
 		}
 
 		System.out.println("Time: "+(System.currentTimeMillis() - start));
-	}
+	}*/
 }

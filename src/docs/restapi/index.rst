@@ -16,6 +16,8 @@ Contents:
    Features
    Health
    ListMetricNames
+   ListTagNames
+   ListTagValues
    Metadata
    QueryMetrics
    QueryMetricTags
