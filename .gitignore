@@ -27,5 +27,4 @@ eclipse-bin/
 
 # KDB Specific
 # TODO(ville): Move under target
-build/
 big_array/
