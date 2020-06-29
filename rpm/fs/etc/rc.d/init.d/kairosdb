@@ -6,7 +6,7 @@
 # description: KairosDB is a fast distributed scalable time series \
 #   abstraction on top of Cassandra.
 # processname: kairosdb
-# config: /opt/kairosdb/conf/kairosdb.conf
+# config: /opt/kairosdb/config/kairosdb.properties
 # pidfile: /var/run/kairosdb.pid
 
 # Source function library.
@@ -18,21 +18,21 @@ dir="/opt/kairosdb"
 log_dir="$dir/logs"
 exec="/opt/kairosdb/bin/kairosdb"
 pid_file="/var/run/kairosdb.pid"
-export CONFIG_FILE="/opt/kairosdb/config/config.conf"
+export CONFIG_FILE="/opt/kairosdb/config/kairosdb.properties"
 export JAVA_HOME="$(dirname $(dirname $(readlink -f $(which java))))"
 export JVM_XMS="64m"
 export JVM_XMX="1024m"
 export LOGBACK_CONFIG="-Dlogback.configurationFile=/opt/kairosdb/config/logback.xml"
 export ADDITIONAL_JAVA_OPTS=""
-export APP_PARAMS="${CONFIG_FILE}"
+export APP_PARAMS="-c run -p ${CONFIG_FILE}"
 export ADDITIONAL_APP_PARAMS=""
 
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
 
 if [ -z "$JAVA_OPTS" ]; then
-    export JAVA_OPTS="${LOGBACK_CONFIG}\
+    export JAVA_OPTS="${LOGBACK_CONFIG} \
         -XX:+HeapDumpOnOutOfMemoryError \
-        -XX:HeapDumpPath=/opt/mad/logs/kairosdb.oom.hprof \
+        -XX:HeapDumpPath=/opt/kairosdb/logs/kairosdb.oom.hprof \
         -XX:+PrintGCDetails \
         -XX:+PrintGCDateStamps \
         -Xloggc:logs/kairosdb.gc.log \

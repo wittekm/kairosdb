@@ -64,7 +64,7 @@ public class ExportTest
 	@BeforeClass
 	public static void setup()
 	{
-		new File("build").mkdir();
+		new File("target").mkdir();
 	}
 
 	private static void loadData(int port) throws IOException, InterruptedException

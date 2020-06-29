@@ -25,23 +25,22 @@ Usage
 ### Installation
 
 #### Manual
-The artifacts from the build are in *metrics-aggregator-daemon/target/appassembler* and should be copied to an
+The artifacts from the build are in *kairosdb/target/appassembler* and should be copied to an
 appropriate directory on your application host(s).
 
 #### Docker
 If you use Docker, we publish a base docker image that makes it easy for you to layer configuration on top of.  Create
-a Docker image based on the image arpnetworking/mad.  Configuration files are typically located at /opt/mad/config/
-with pipeline files located at /opt/mad/config/pipelines.  In addition, you can specify CONFIG_FILE (defaults to
-/opt/mad/config/config.json), PARAMS (defaults to $CONFIG_FILE), LOGGING_CONFIG (defaults to
-"-Dlogback.configurationFile=/opt/mad/config/logback.xml"), and JAVA_OPTS (defaults to "") environment variables to
+a Docker image based on the image inscopmetrics/kairosdb.  Configuration files are typically located at /opt/kairosdb/config/.
+In addition, you can specify CONFIG_FILE (defaults to /opt/kairosdb/config/kairosdb.properties), LOGBACK_CONFIG (defaults to
+"-Dlogback.configurationFile=/opt/kairosdb/config/logback.xml"), and JAVA_OPTS (defaults to "") environment variables to
 control startup.
 
 ### Execution
 
-In the installation's *bin* directory there are scripts to start Metrics Aggregator Daemon: *mad* (Linux) and
-*mad.bat* (Windows).  One of these should be executed on system start with appropriate parameters; for example:
+In the installation's *bin* directory there are scripts to start Kairosdb: *kairosdb* (Linux) and
+*kairosdb.bat* (Windows).  One of these should be executed on system start with appropriate parameters; for example:
 
-    /usr/local/lib/metrics-aggregator-daemon/bin/mad /usr/local/lib/metrics-aggregator-daemon/config/config.json
+    /usr/local/lib/kairosdb/bin/kairosdb -c run -p /usr/local/lib/kairosdb/config/kairosdb.properties
 
 ### Configuration
 
@@ -52,16 +51,17 @@ To customize logging you may provide a [LogBack](http://logback.qos.ch/) configu
 
 Outside of Docker, set the `JAVA_OPTS` environment variable to configure logging:
 
-    export JAVA_OPTS="-Dlogback.configurationFile=/usr/local/lib/metrics-aggregator-daemon/config/logback-console.xml"
+    export JAVA_OPTS="-Dlogback.configurationFile=/usr/local/lib/kairosdb/config/logback-console.xml"
 
-Where */usr/local/lib/metrics-aggregator-daemon/config/logger.xml* is the path to your logging configuration file.
+Where */usr/local/lib/kairosdb/config/logger-console.xml* is the path to your logging configuration file.
 
 Under Docker, set the `LOGBACK_CONFIG` environment variable to configure logging:
 
-    docker run -e LOGBACK_CONFIG=/opt/mad/config/logack-console.xml arpnetworking/mad:latest
+    docker run -e LOGBACK_CONFIG=/opt/kairosdb/config/logack-console.xml inscopemetrics/kairosdb:latest
 
-#### Daemon
+#### Service
 
+Please refer to the original KairosDb documentation linked below for information on how to configure KairosDb.
 
 Origin
 -----

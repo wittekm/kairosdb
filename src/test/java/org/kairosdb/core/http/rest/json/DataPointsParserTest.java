@@ -652,7 +652,7 @@ public class DataPointsParserTest
 	public void test_valueType_invalid() throws DatastoreException, IOException
 	{
 		// Value is a map which is not valid
-		String json = "{\"name\": \"metric1\", \"timestamp\": 1234, \"value\": " + new HashMap() + ", \"tags\":{\"foo\":\"bar\"}}";
+		String json = "{\"name\": \"metric1\", \"timestamp\": 1234, \"value\": " + new HashMap<>() + ", \"tags\":{\"foo\":\"bar\"}}";
 
 		DataPointsParser parser = new DataPointsParser(publisher, new StringReader(json),
 				new Gson(), dataPointFactory);
@@ -668,7 +668,7 @@ public class DataPointsParserTest
 	public void test_valueType_dataPointArray_invalid() throws DatastoreException, IOException
 	{
 		// Value is a map which is not valid
-		String json = "{\"name\": \"metric1\", \"datapoints\": [[1349109376, " + new HashMap() + "]], \"tags\":{\"foo\":\"bar\"}}";
+		String json = "{\"name\": \"metric1\", \"datapoints\": [[1349109376, " + new HashMap<>() + "]], \"tags\":{\"foo\":\"bar\"}}";
 
 		DataPointsParser parser = new DataPointsParser(publisher, new StringReader(json),
 				new Gson(), dataPointFactory);

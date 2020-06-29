@@ -13,6 +13,7 @@ KairosDb Release Notes
   * Jar: 
     * Adds:
       * `LICENSE`
+      * `logback.xml`
       * `META-INF/maven/io.inscopemetrics.kairosdb/kairosdb/pom.properties`
       * `META-INF/maven/io.inscopemetrics.kairosdb/kairosdb/pom.xml`
   * Docker

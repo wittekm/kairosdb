@@ -51,17 +51,6 @@
         <include>kairosdb</include>
       </includes>
     </fileSet>
-    <!-- TODO(ville): Deprecate these files -->
-    <fileSet>
-      <directory>${project.basedir}/scripts</directory>
-      <outputDirectory>bin</outputDirectory>
-      <fileMode>0755</fileMode>
-      <includes>
-        <include>check-log-errors.sh</include>
-        <include>create_hbase_table.sh</include>
-        <include>kairosdb-service.sh</include>
-      </includes>
-    </fileSet>
     <fileSet>
       <directory>${buildDirectory}/appassembler/lib</directory>
       <outputDirectory>lib</outputDirectory>

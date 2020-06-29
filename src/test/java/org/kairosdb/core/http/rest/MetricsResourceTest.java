@@ -204,7 +204,7 @@ public class MetricsResourceTest extends ResourceBase
 	{
 		thrown.expect(InvalidServerTypeException.class);
 		thrown.expectMessage("[{\"Forbidden\": \"INGEST API methods are disabled on this KairosDB instance.\"}]");
-		MetricsResource.checkServerTypeStatic(EnumSet.of(ServerType.QUERY, ServerType.DELETE), ServerType.INGEST, "/datapoints", "POST");
+		MetricsResource.checkServerTypeStatic(EnumSet.of(MetricsResource.ServerType.QUERY, MetricsResource.ServerType.DELETE), MetricsResource.ServerType.INGEST, "/datapoints", "POST");
 	}
 
 	@Test
@@ -212,7 +212,7 @@ public class MetricsResourceTest extends ResourceBase
 	{
 		thrown.expect(InvalidServerTypeException.class);
 		thrown.expectMessage("[{\"Forbidden\": \"QUERY API methods are disabled on this KairosDB instance.\"}]");
-		MetricsResource.checkServerTypeStatic(EnumSet.of(ServerType.INGEST, ServerType.DELETE), ServerType.QUERY, "/datapoints/query", "POST");
+		MetricsResource.checkServerTypeStatic(EnumSet.of(MetricsResource.ServerType.INGEST, MetricsResource.ServerType.DELETE), MetricsResource.ServerType.QUERY, "/datapoints/query", "POST");
 	}
 
 	@Test
@@ -220,25 +220,25 @@ public class MetricsResourceTest extends ResourceBase
 	{
 		thrown.expect(InvalidServerTypeException.class);
 		thrown.expectMessage("[{\"Forbidden\": \"DELETE API methods are disabled on this KairosDB instance.\"}]");
-		MetricsResource.checkServerTypeStatic(EnumSet.of(ServerType.INGEST, ServerType.QUERY), ServerType.DELETE, "/datapoints/delete", "POST");
+		MetricsResource.checkServerTypeStatic(EnumSet.of(MetricsResource.ServerType.INGEST, MetricsResource.ServerType.QUERY), MetricsResource.ServerType.DELETE, "/datapoints/delete", "POST");
 	}
 
 	@Test
 	public void test_checkServerTypeStaticIngestEnabled() throws InvalidServerTypeException
 	{
-		MetricsResource.checkServerTypeStatic(EnumSet.of(ServerType.INGEST), ServerType.INGEST, "/datapoints", "POST");
+		MetricsResource.checkServerTypeStatic(EnumSet.of(MetricsResource.ServerType.INGEST), MetricsResource.ServerType.INGEST, "/datapoints", "POST");
 	}
 
 	@Test
 	public void test_checkServerTypeStaticQueryEnabled() throws InvalidServerTypeException
 	{
-		MetricsResource.checkServerTypeStatic(EnumSet.of(ServerType.QUERY), ServerType.QUERY, "/datapoints/query", "POST");
+		MetricsResource.checkServerTypeStatic(EnumSet.of(MetricsResource.ServerType.QUERY), MetricsResource.ServerType.QUERY, "/datapoints/query", "POST");
 	}
 
 	@Test
 	public void test_checkServerTypeStaticDeleteEnabled() throws InvalidServerTypeException
 	{
-		MetricsResource.checkServerTypeStatic(EnumSet.of(ServerType.DELETE), ServerType.DELETE, "/datapoints/delete", "POST");
+		MetricsResource.checkServerTypeStatic(EnumSet.of(MetricsResource.ServerType.DELETE), MetricsResource.ServerType.DELETE, "/datapoints/delete", "POST");
 	}
 
 	@Test

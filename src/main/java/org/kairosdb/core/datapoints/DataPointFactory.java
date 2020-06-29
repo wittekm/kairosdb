@@ -5,10 +5,9 @@ import org.kairosdb.core.DataPoint;
 
 import java.io.DataInput;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 /**
- Implmementation must be thread safe.
+ Implementation must be thread safe.
  */
 public interface DataPointFactory
 {
@@ -43,6 +42,6 @@ public interface DataPointFactory
 	 */
 	//public String getAPIType();
 
-	public DataPoint getDataPoint(long timestamp, JsonElement json) throws IOException;
-	public DataPoint getDataPoint(long timestamp, DataInput buffer) throws IOException;
+	DataPoint getDataPoint(long timestamp, JsonElement json) throws IOException;
+	DataPoint getDataPoint(long timestamp, DataInput buffer) throws IOException;
 }

@@ -22,15 +22,17 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.tngtech.java.junit.dataprovider.DataProvider;
+import com.tngtech.java.junit.dataprovider.DataProviderRunner;
+import com.tngtech.java.junit.dataprovider.UseDataProvider;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.json.JSONException;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Parameters;
-import org.testng.annotations.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -57,10 +59,11 @@ List of tests we need to perform
 5. Test aggregators (multiple)
 6. Test group by
  */
-
+@RunWith(DataProviderRunner.class)
 public class QueryIT
 {
-	private JsonParser m_parser = new JsonParser();
+	private static final JsonParser parser = new JsonParser();
+
 	private String m_host = "127.0.0.1";
 	private String m_port = "8080";
 
@@ -69,7 +72,7 @@ public class QueryIT
 		m_host = System.getProperty("dockerHostAddress", m_host);
 	}
 
-	private JsonElement readJsonFromStream(String path, String metricName) throws IOException, JSONException
+	private static JsonElement readJsonFromStream(String path, String metricName) throws IOException, JSONException
 	{
 		try (InputStream is = ClassLoader.getSystemResourceAsStream(path))
 		{
@@ -81,7 +84,7 @@ public class QueryIT
 			// replace metric name
 			str = str.replace("<metric_name>", metricName);
 
-			return (m_parser.parse(str));
+			return (parser.parse(str));
 		}
 	}
 
@@ -104,7 +107,7 @@ public class QueryIT
 				ByteArrayOutputStream output = new ByteArrayOutputStream(1024);
 				httpResponse.getEntity().writeTo(output);
 		
-				return (m_parser.parse(output.toString("UTF-8")));
+				return (parser.parse(output.toString("UTF-8")));
 			}
 		}
 	}
@@ -139,8 +142,8 @@ public class QueryIT
 		}
 	}
 
-	@DataProvider(name = "query-provider")
-	public Object[][] getQueryTests() throws IOException, JSONException, URISyntaxException
+	@DataProvider
+	public static Object[][] getQueryTests() throws IOException, JSONException, URISyntaxException
 	{
 		ArrayList<Object[]> ret = new ArrayList<Object[]>();
 
@@ -161,7 +164,8 @@ public class QueryIT
 		return (ret.toArray(new Object[0][]));
 	}
 
-	@Test(dataProvider = "query-provider")
+	@Test
+	@UseDataProvider("getQueryTests")
 	public void performQueryTest(String testName, JsonElement dataPoints, JsonElement query, JsonElement response)
 			throws IOException, JSONException, InterruptedException
 	{
@@ -309,7 +313,7 @@ public class QueryIT
 
 	public static List<String> getTestDirectories(String matchingDirectoryName) throws URISyntaxException, IOException
 	{
-		return findTestDirectories(new File("src/integration-test/resources"), matchingDirectoryName);
+		return findTestDirectories(new File("src/test/resources"), matchingDirectoryName);
 	}
 
 	@SuppressWarnings("ConstantConditions")

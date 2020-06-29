@@ -257,8 +257,8 @@ public class CassandraDatastoreIT extends DatastoreTestHelper
 	public static void setupDatastore() throws InterruptedException, DatastoreException
 	{
 		String cassandraHost = "localhost";
-		if (System.getenv("CASSANDRA_HOST") != null)
-			cassandraHost = System.getenv("CASSANDRA_HOST");
+		if (System.getProperty("dockerHostAddress") != null)
+			cassandraHost = System.getProperty("dockerHostAddress");
 
 		CassandraConfiguration configuration = new CassandraConfiguration("kairosdb_test");
 		configuration.setHostList(cassandraHost);
@@ -329,7 +329,9 @@ public class CassandraDatastoreIT extends DatastoreTestHelper
 			deleteMetric(metricName);
 		}
 
-		s_datastore.close();
+		if (s_datastore != null) {
+			s_datastore.close();
+		}
 	}
 
 	private static List<DataPointsRowKey> readIterator(Iterator<DataPointsRowKey> it)
