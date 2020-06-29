@@ -19,6 +19,7 @@ package org.kairosdb.core;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+import org.h2.store.fs.FileUtils;
 import org.json.JSONException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -83,7 +84,7 @@ public class ExportTest
 
 		os.close();
 		sock.close();
-		Thread.sleep(2000);
+		Thread.sleep(4000);
 	}
 
 	@BeforeClass
@@ -130,6 +131,7 @@ public class ExportTest
 	{
 		verifyDataPoints();
 
+		FileUtils.delete("target/export.json");
 		Writer ps = new OutputStreamWriter(new FileOutputStream("target/export.json"), "UTF-8");
 		s_main.runExport(ps, Collections.singletonList(METRIC_NAME));
 		ps.flush();
@@ -157,7 +159,7 @@ public class ExportTest
 		s_main.runImport(export);
 
 		export.close();
-		Thread.sleep(2000);
+		Thread.sleep(4000);
 
 		verifyDataPoints();
 	}
