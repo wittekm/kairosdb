@@ -57,12 +57,6 @@ public class DatastoreMetricQueryImpl implements DatastoreMetricQuery
 	}
 
 	@Override
-	public boolean isExplicitTags()
-	{
-		return false;
-	}
-
-	@Override
 	public long getStartTime()
 	{
 		return (m_startTime);

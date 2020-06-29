@@ -1,18 +1,30 @@
 package org.kairosdb.rollup;
 
 import com.google.common.collect.ImmutableSortedMap;
+import org.kairosdb.eventbus.Subscribe;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.kairosdb.core.DataPoint;
 import org.kairosdb.core.TestDataPointFactory;
-import org.kairosdb.core.aggregator.*;
+import org.kairosdb.core.aggregator.DiffAggregator;
+import org.kairosdb.core.aggregator.DivideAggregator;
+import org.kairosdb.core.aggregator.MaxAggregator;
+import org.kairosdb.core.aggregator.MinAggregator;
+import org.kairosdb.core.aggregator.Sampling;
 import org.kairosdb.core.datapoints.DoubleDataPoint;
 import org.kairosdb.core.datapoints.DoubleDataPointFactory;
-import org.kairosdb.core.datastore.*;
+import org.kairosdb.core.datastore.DataPointGroup;
+import org.kairosdb.core.datastore.Datastore;
+import org.kairosdb.core.datastore.DatastoreMetricQuery;
+import org.kairosdb.core.datastore.Duration;
+import org.kairosdb.core.datastore.KairosDatastore;
+import org.kairosdb.core.datastore.QueryCallback;
+import org.kairosdb.core.datastore.QueryQueuingManager;
+import org.kairosdb.core.datastore.TagSet;
+import org.kairosdb.core.datastore.TimeUnit;
 import org.kairosdb.core.exception.DatastoreException;
-import org.kairosdb.eventbus.Subscribe;
 import org.kairosdb.plugin.Aggregator;
 import org.kairosdb.testing.ListDataPointGroup;
 
@@ -44,7 +56,6 @@ public class RollUpJobTest
 		testDataStore = new TestDatastore();
 		datastore = new KairosDatastore(testDataStore, new QueryQueuingManager(1, "hostname"),
 				new TestDataPointFactory(), false);
-		datastore.init();
 	}
 
 	@Test
@@ -60,7 +71,7 @@ public class RollUpJobTest
 		MaxAggregator maxAggregator = new MaxAggregator(dataPointFactory);
 		maxAggregator.setSampling(sampling2);
 
-		List<Aggregator> aggregators = new ArrayList<>();
+		List<Aggregator> aggregators = new ArrayList<Aggregator>();
 		aggregators.add(minAggregator);
 		aggregators.add(maxAggregator);
 		aggregators.add(new DivideAggregator(dataPointFactory));
@@ -70,7 +81,7 @@ public class RollUpJobTest
 
 		assertThat(lastSampling, equalTo(sampling2));
 
-		aggregators = new ArrayList<>();
+		aggregators = new ArrayList<Aggregator>();
 		aggregators.add(maxAggregator);
 		aggregators.add(new DivideAggregator(dataPointFactory));
 		aggregators.add(new DiffAggregator(dataPointFactory));
@@ -85,7 +96,7 @@ public class RollUpJobTest
 	public void test_getLastSampling_no_sampling()
 	{
 		DoubleDataPointFactory dataPointFactory = mock(DoubleDataPointFactory.class);
-		List<Aggregator> aggregators = new ArrayList<>();
+		List<Aggregator> aggregators = new ArrayList<Aggregator>();
 		aggregators.add(new DivideAggregator(dataPointFactory));
 		aggregators.add(new DiffAggregator(dataPointFactory));
 
@@ -101,7 +112,7 @@ public class RollUpJobTest
 		String metricName = "foo";
 
 		ImmutableSortedMap<String, String> localHostTags = ImmutableSortedMap.of("host", "localhost");
-		List<DataPoint> localhostDataPoints = new ArrayList<>();
+		List<DataPoint> localhostDataPoints = new ArrayList<DataPoint>();
 		localhostDataPoints.add(new DoubleDataPoint(lastTimeStamp + 1, 10));
 		localhostDataPoints.add(new DoubleDataPoint(lastTimeStamp + 2, 11));
 		localhostDataPoints.add(new DoubleDataPoint(lastTimeStamp + 3, 12));
@@ -109,7 +120,7 @@ public class RollUpJobTest
 		localhostDataPoints.add(new DoubleDataPoint(lastTimeStamp + 5, 14));
 
 		ImmutableSortedMap<String, String> remoteTags = ImmutableSortedMap.of("host", "remote");
-		List<DataPoint> remoteDataPoints = new ArrayList<>();
+		List<DataPoint> remoteDataPoints = new ArrayList<DataPoint>();
 		remoteDataPoints.add(new DoubleDataPoint(lastTimeStamp + 1, 10));
 		remoteDataPoints.add(new DoubleDataPoint(lastTimeStamp + 2, 11));
 
@@ -143,7 +154,7 @@ public class RollUpJobTest
 		String metricName = "foo";
 
 		ImmutableSortedMap<String, String> localHostTags = ImmutableSortedMap.of("host", "localhost");
-		List<DataPoint> localhostDataPoints = new ArrayList<>();
+		List<DataPoint> localhostDataPoints = new ArrayList<DataPoint>();
 		localhostDataPoints.add(new DoubleDataPoint(lastTimeStamp + 1, 10));
 		localhostDataPoints.add(new DoubleDataPoint(lastTimeStamp + 2, 11));
 		localhostDataPoints.add(new DoubleDataPoint(lastTimeStamp + 3, 12));
@@ -151,7 +162,7 @@ public class RollUpJobTest
 		localhostDataPoints.add(new DoubleDataPoint(lastTimeStamp + 5, 14));
 
 		ImmutableSortedMap<String, String> remoteTags = ImmutableSortedMap.of("host", "remote");
-		List<DataPoint> remoteDataPoints = new ArrayList<>();
+		List<DataPoint> remoteDataPoints = new ArrayList<DataPoint>();
 		remoteDataPoints.add(new DoubleDataPoint(lastTimeStamp + 1, 10));
 		remoteDataPoints.add(new DoubleDataPoint(lastTimeStamp + 2, 11));
 
@@ -207,7 +218,7 @@ public class RollUpJobTest
 	}
 
 	@Test
-	public void test_calculatEndTime_datapointNotNull_recentTime()
+	public void test_calculatEndTime_datapointNotNull_recentTime() throws ParseException
 	{
 		long now = System.currentTimeMillis();
 		Duration executionInterval = new Duration();
@@ -233,19 +244,19 @@ public class RollUpJobTest
 
 	public static class TestDatastore implements Datastore
 	{
-		List<ListDataPointGroup> dataPointGroups = new ArrayList<>();
+		List<ListDataPointGroup> dataPointGroups = new ArrayList<ListDataPointGroup>();
 
-		void clear()
+		public void clear()
 		{
-			dataPointGroups = new ArrayList<>();
+			dataPointGroups = new ArrayList<ListDataPointGroup>();
 		}
 
 		@Override
-		public void close()
+		public void close() throws InterruptedException, DatastoreException
 		{
 		}
 
-		void putDataPoints(String metricName, ImmutableSortedMap<String, String> tags, List<DataPoint> dataPoints)
+		public void putDataPoints(String metricName, ImmutableSortedMap<String, String> tags, List<DataPoint> dataPoints) throws DatastoreException
 		{
 			ListDataPointGroup dataPointGroup = new ListDataPointGroup(metricName);
 
@@ -263,7 +274,7 @@ public class RollUpJobTest
 		}
 
 		@Subscribe
-		public void putDataPoint(String metricName, ImmutableSortedMap<String, String> tags, DataPoint dataPoint, int ttl)
+		public void putDataPoint(String metricName, ImmutableSortedMap<String, String> tags, DataPoint dataPoint, int ttl) throws DatastoreException
 		{
 			ListDataPointGroup dataPointGroup = new ListDataPointGroup(metricName);
 			dataPointGroup.addDataPoint(dataPoint);
@@ -277,19 +288,19 @@ public class RollUpJobTest
 		}
 
 		@Override
-		public Iterable<String> getMetricNames(String prefix)
+		public Iterable<String> getMetricNames(String prefix) throws DatastoreException
 		{
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public Iterable<String> getTagNames()
+		public Iterable<String> getTagNames() throws DatastoreException
 		{
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public Iterable<String> getTagValues()
+		public Iterable<String> getTagValues() throws DatastoreException
 		{
 			throw new UnsupportedOperationException();
 		}
@@ -303,7 +314,7 @@ public class RollUpJobTest
 				{
 					dataPointGroup.sort(query.getOrder());
 
-					SortedMap<String, String> tags = new TreeMap<>();
+					SortedMap<String, String> tags = new TreeMap<String, String>();
 					for (String tagName : dataPointGroup.getTagNames())
 					{
 						tags.put(tagName, dataPointGroup.getTagValues(tagName).iterator().next());
@@ -351,13 +362,15 @@ public class RollUpJobTest
 		}
 
 		@Override
-		public void deleteDataPoints(DatastoreMetricQuery deleteQuery)
+		public void deleteDataPoints(DatastoreMetricQuery deleteQuery) throws
+				DatastoreException
 		{
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public TagSet queryMetricTags(DatastoreMetricQuery query)
+		public TagSet queryMetricTags(DatastoreMetricQuery query) throws
+				DatastoreException
 		{
 			throw new UnsupportedOperationException();
 		}

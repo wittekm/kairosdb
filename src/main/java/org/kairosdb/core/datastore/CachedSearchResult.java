@@ -20,7 +20,6 @@ import org.kairosdb.core.DataPoint;
 import org.kairosdb.core.KairosDataPointFactory;
 import org.kairosdb.util.BufferedDataInputStream;
 import org.kairosdb.util.BufferedDataOutputStream;
-import org.kairosdb.util.KDataInputStream;
 import org.kairosdb.util.MemoryMonitor;
 import org.kairosdb.util.StringPool;
 import org.slf4j.Logger;
@@ -342,6 +341,8 @@ public class CachedSearchResult implements SearchResult
 	//===========================================================================
 	private class FilePositionMarker implements Iterable<DataPoint>, Externalizable
 	{
+		private static final long serialVersionUID = 6689886756826118923L;
+
 		private long m_startPosition;
 		private long m_endPosition;
 		private Map<String, String> m_tags;
@@ -432,7 +433,7 @@ public class CachedSearchResult implements SearchResult
 	{
 		private long m_currentPosition;
 		private long m_endPostition;
-		private KDataInputStream m_readBuffer = null;
+		private DataInputStream m_readBuffer = null;
 		private Map<String, String> m_tags;
 		private final String m_dataType;
 		private final int m_dataPointCount;

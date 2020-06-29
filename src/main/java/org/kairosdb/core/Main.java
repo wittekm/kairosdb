@@ -68,11 +68,10 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.UUID;
@@ -96,7 +95,7 @@ public class Main
 	private Injector m_injector;
 	private List<KairosDBService> m_services = new ArrayList<KairosDBService>();
 
-	private void loadPlugins(KairosRootConfig config, final File propertiesFile) throws IOException
+	private void loadPlugins(Properties props, final File propertiesFile) throws IOException
 	{
 		File propDir = propertiesFile.getParentFile();
 		if (propDir == null)
@@ -107,13 +106,7 @@ public class Main
 			@Override
 			public boolean accept(File dir, String name)
 			{
-				try
-				{
-					KairosRootConfig.ConfigFormat format = KairosRootConfig.ConfigFormat.fromFileName(name);
-					return (config.isSupportedFormat(format)) && !name.equals(propertiesFile.getName());
-				}
-				catch (IllegalArgumentException ignored) {}
-				return false;
+				return (name.endsWith(".properties") && !name.equals(propertiesFile.getName()));
 			}
 		});
 		if (pluginProps == null)
@@ -132,7 +125,7 @@ public class Main
 			{
 				try
 				{
-					config.load(propStream, KairosRootConfig.ConfigFormat.fromFileName(prop));
+					props.load(propStream);
 				}
 				finally
 				{
@@ -141,7 +134,10 @@ public class Main
 			}
 
 			//Load the file in
-			config.load(new File(propDir, prop));
+			try(FileInputStream fis = new FileInputStream(new File(propDir, prop)))
+			{
+				props.load(fis);
+			}
 		}
 	}
 
@@ -173,53 +169,50 @@ public class Main
 	 * allow overwriting any existing property via correctly named environment variable
 	 * e.g. kairosdb.datastore.cassandra.host_list via KAIROSDB_DATASTORE_CASSANDRA_HOST_LIST
 	 */
-	protected void applyEnvironmentVariables(KairosRootConfig config)
-	{
+	protected void applyEnvironmentVariables(Properties props) {
 		Map<String, String> env = System.getenv();
-		Map<String, String> props = new HashMap<>();
-		for (String propName : config)
-		{
+		for (String propName : props.stringPropertyNames()) {
 			String envVarName = toEnvVarName(propName);
-			if (env.containsKey(envVarName))
-			{
-				props.put(propName, env.get(envVarName));
+			if (env.containsKey(envVarName)) {
+				props.setProperty(propName, env.get(envVarName));
 			}
 		}
-
-		config.load(props);
 	}
 
 	public Main(File propertiesFile) throws IOException
 	{
-		KairosRootConfig config = new KairosRootConfig();
-		String defaultConfig = "kairosdb.conf";
-		try (InputStream is = getClass().getClassLoader().getResourceAsStream(defaultConfig))
+		Properties props = new Properties();
+		InputStream is = getClass().getClassLoader().getResourceAsStream("kairosdb.properties");
+		try
 		{
-			if (is != null)
-				config.load(is, KairosRootConfig.ConfigFormat.fromFileName(defaultConfig));
+			props.load(is);
+		}
+		finally
+		{
+			is.close();
 		}
 
 		if (propertiesFile != null)
 		{
-			config.load(propertiesFile);
-			loadPlugins(config, propertiesFile);
+			try(FileInputStream fis = new FileInputStream(propertiesFile))
+			{
+				props.load(fis);
+			}
+
+			loadPlugins(props, propertiesFile);
 		}
 
-		config.loadSystemProperties();
-
-		applyEnvironmentVariables(config);
-
-		config.resolve();
-
-		/*for (String s : config)
+		for (String name : System.getProperties().stringPropertyNames())
 		{
-			System.out.println(s);
-		}*/
+			props.setProperty(name, System.getProperty(name));
+		}
+
+		applyEnvironmentVariables(props);
 
 		// Create guid for this server
-		if (!config.hasPath(KAIROSDB_SERVER_GUID)) {
+		if (!props.containsKey(KAIROSDB_SERVER_GUID)) {
 			String guid = UUID.randomUUID().toString();
-			config.load(Collections.singletonMap(KAIROSDB_SERVER_GUID, guid));
+			props.put(KAIROSDB_SERVER_GUID, guid);
 
 			if (propertiesFile != null) {
 				Path path = Paths.get(propertiesFile.getAbsoluteFile().getParent(), GUID_PROPERTIES_FILENAME);
@@ -228,21 +221,21 @@ public class Main
 		}
 
 		List<Module> moduleList = new ArrayList<Module>();
-		moduleList.add(new CoreModule(config));
+		moduleList.add(new CoreModule(props));
 
-		for (String propName : config)
+		for (String propName : props.stringPropertyNames())
 		{
 			if (propName.startsWith(SERVICE_PREFIX))
 			{
 				Class<?> aClass;
 				try
 				{
-					if ("".equals(config.getProperty(propName)) || "<disabled>".equals(config.getProperty(propName)))
+					if ("".equals(props.getProperty(propName)) || "<disabled>".equals(props.getProperty(propName)))
 						continue;
 
 					String serviceName = propName.substring(SERVICE_PREFIX.length());
 
-					String pluginFolder = config.getProperty(SERVICE_FOLDER_PREFIX + serviceName);
+					String pluginFolder = props.getProperty(SERVICE_FOLDER_PREFIX + serviceName);
 
 					ClassLoader pluginLoader = this.getClass().getClassLoader();
 
@@ -256,16 +249,14 @@ public class Main
 						pluginLoader = new PluginClassLoader(getJarsInPath(pluginFolder), pluginLoader);
 					}
 
-					logger.info("Loading service {}: {}", serviceName, config.getProperty(propName));
-
-					aClass = pluginLoader.loadClass(config.getProperty(propName));
+					aClass = pluginLoader.loadClass(props.getProperty(propName));
 					if (Module.class.isAssignableFrom(aClass))
 					{
 						Constructor<?> constructor = null;
 
 						try
 						{
-							constructor = aClass.getConstructor(KairosRootConfig.class);
+							constructor = aClass.getConstructor(Properties.class);
 						}
 						catch (NoSuchMethodException ignore)
 						{
@@ -277,7 +268,7 @@ public class Main
 						 */
 						Module mod;
 						if (constructor != null)
-							mod = (Module) constructor.newInstance(config);
+							mod = (Module) constructor.newInstance(props);
 						else
 							mod = (Module) aClass.newInstance();
 
@@ -347,99 +338,90 @@ public class Main
 		if (!StringUtils.isNullOrEmpty(arguments.propertiesFile))
 			propertiesFile = new File(arguments.propertiesFile);
 
-		try
+		final Main main = new Main(propertiesFile);
+
+		if (arguments.operationCommand.equals("export"))
 		{
-			final Main main = new Main(propertiesFile);
-
-			if (arguments.operationCommand.equals("export"))
+			if (!StringUtils.isNullOrEmpty(arguments.exportFile))
 			{
-				if (!StringUtils.isNullOrEmpty(arguments.exportFile))
-				{
-					Writer ps = new OutputStreamWriter(new FileOutputStream(arguments.exportFile,
-							arguments.appendToExportFile), "UTF-8");
-					main.runExport(ps, arguments.exportMetricNames);
-					ps.flush();
-					ps.close();
-					System.out.println("Export finished");
-				}
-				else
-				{
-					OutputStreamWriter writer = new OutputStreamWriter(System.out, "UTF-8");
-					main.runExport(writer, arguments.exportMetricNames);
-					writer.flush();
-				}
-
-				main.stopServices();
-				System.out.println("All done");
+				Writer ps = new OutputStreamWriter(new FileOutputStream(arguments.exportFile,
+						arguments.appendToExportFile), "UTF-8");
+				main.runExport(ps, arguments.exportMetricNames);
+				ps.flush();
+				ps.close();
+				System.out.println("Export finished");
 			}
-			else if (arguments.operationCommand.equals("import"))
+			else
 			{
-				if (!StringUtils.isNullOrEmpty(arguments.exportFile))
-				{
-					FileInputStream fin = new FileInputStream(arguments.exportFile);
-					main.runImport(fin);
-					fin.close();
-				}
-				else
-				{
-					main.runImport(System.in);
-				}
-				System.out.println("Import finished");
-				Thread.sleep(10000);
-
-				main.stopServices();
-				System.out.println("All done");
+				OutputStreamWriter writer = new OutputStreamWriter(System.out, "UTF-8");
+				main.runExport(writer, arguments.exportMetricNames);
+				writer.flush();
 			}
-			else if (arguments.operationCommand.equals("run") || arguments.operationCommand.equals("start"))
-			{
-				try
-				{
-					Runtime.getRuntime().addShutdownHook(new Thread(new Runnable()
-					{
-						public void run()
-						{
-							try
-							{
-								main.stopServices();
 
-								s_shutdownObject.countDown();
-							}
-							catch (Exception e)
-							{
-								logger.error("Shutdown exception:", e);
-							}
-						}
-					}));
-
-					main.startServices();
-
-					logger.info("------------------------------------------");
-					logger.info("     KairosDB service started");
-					logger.info("------------------------------------------");
-
-					//main.runMissTest();
-					waitForShutdown();
-				}
-				catch (Exception e)
-				{
-					logger.error("Failed starting up services", e);
-					//main.stopServices();
-					System.exit(0);
-				}
-				finally
-				{
-					logger.info("--------------------------------------");
-					logger.info("     KairosDB service is now down!");
-					logger.info("--------------------------------------");
-				}
-
-			}
+			main.stopServices();
+			System.out.println("All done");
 		}
-		catch (Exception e)
+		else if (arguments.operationCommand.equals("import"))
 		{
-			System.out.println(e.getClass().getName());
-			System.out.println(e.getMessage());
-			logger.error("Failed to startup", e);
+			if (!StringUtils.isNullOrEmpty(arguments.exportFile))
+			{
+				FileInputStream fin = new FileInputStream(arguments.exportFile);
+				main.runImport(fin);
+				fin.close();
+			}
+			else
+			{
+				main.runImport(System.in);
+			}
+			System.out.println("Import finished");
+			Thread.sleep(10000);
+
+			main.stopServices();
+			System.out.println("All done");
+		}
+		else if (arguments.operationCommand.equals("run") || arguments.operationCommand.equals("start"))
+		{
+			try
+			{
+				Runtime.getRuntime().addShutdownHook(new Thread(new Runnable()
+				{
+					public void run()
+					{
+						try
+						{
+							main.stopServices();
+
+							s_shutdownObject.countDown();
+						}
+						catch (Exception e)
+						{
+							logger.error("Shutdown exception:", e);
+						}
+					}
+				}));
+
+				main.startServices();
+
+				logger.info("------------------------------------------");
+				logger.info("     KairosDB service started");
+				logger.info("------------------------------------------");
+
+				//main.runMissTest();
+				waitForShutdown();
+			}
+			catch (Exception e)
+			{
+				logger.error("Failed starting up services", e);
+				//main.stopServices();
+				System.exit(0);
+			}
+			finally
+			{
+				logger.info("--------------------------------------");
+				logger.info("     KairosDB service is now down!");
+				logger.info("--------------------------------------");
+			}
+
 		}
 	}
 

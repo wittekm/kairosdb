@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 	should not be modified.
 	
 */
+@SuppressWarnings("serial")
 public class ServiceIndex_base extends GenOrmRecord
 	{
 	protected static final Logger s_logger = LoggerFactory.getLogger(ServiceIndex.class.getName());
@@ -372,7 +373,7 @@ public class ServiceIndex_base extends GenOrmRecord
 		*/
 		public ResultSet getServiceKeys(String service)
 			{
-			String query = SELECT+"from service_index this\n				WHERE\n				this.\"service\" = ?\n				ORDER BY this.\"key\" asc";
+			String query = SELECT+"from service_index this\n				where\n				this.\"service\" = ?\n				order by this.\"key\" asc";
 			
 			java.sql.PreparedStatement genorm_statement = null;
 			

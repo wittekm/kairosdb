@@ -29,11 +29,6 @@ public abstract class DataPointHelper implements DataPoint
 		return m_timestamp;
 	}
 
-	public void setTimestamp(long timestamp)
-	{
-		m_timestamp = timestamp;
-	}
-
 	@Override
 	public boolean equals(Object o)
 	{

@@ -23,7 +23,10 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import org.junit.Before;
 import org.junit.Test;
-import org.kairosdb.core.*;
+import org.kairosdb.core.DataPoint;
+import org.kairosdb.core.DataPointSet;
+import org.kairosdb.core.KairosDataPointFactory;
+import org.kairosdb.core.TestDataPointFactory;
 import org.kairosdb.core.datapoints.StringDataPoint;
 import org.kairosdb.core.datastore.Datastore;
 import org.kairosdb.core.datastore.DatastoreMetricQuery;
@@ -45,6 +48,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Properties;
 import java.util.zip.GZIPInputStream;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -60,11 +64,11 @@ public class DataPointsParserTest
 	private Publisher<DataPointEvent> publisher;
 
 	@Before
-	public void setup()
-	{
-		eventBus = new FilterEventBus(new EventBusConfiguration(new KairosRootConfig()));
-		publisher = eventBus.createPublisher(DataPointEvent.class);
-	}
+    public void setup()
+    {
+        eventBus = new FilterEventBus(new EventBusConfiguration(new Properties()));
+        publisher = eventBus.createPublisher(DataPointEvent.class);
+    }
 
 	@Test
 	public void test_emptyJson_Invalid() throws DatastoreException, IOException
@@ -648,7 +652,7 @@ public class DataPointsParserTest
 	public void test_valueType_invalid() throws DatastoreException, IOException
 	{
 		// Value is a map which is not valid
-		String json = "{\"name\": \"metric1\", \"timestamp\": 1234, \"value\": " + new HashMap() + ", \"tags\":{\"foo\":\"bar\"}}";
+		String json = "{\"name\": \"metric1\", \"timestamp\": 1234, \"value\": " + new HashMap<>() + ", \"tags\":{\"foo\":\"bar\"}}";
 
 		DataPointsParser parser = new DataPointsParser(publisher, new StringReader(json),
 				new Gson(), dataPointFactory);
@@ -664,7 +668,7 @@ public class DataPointsParserTest
 	public void test_valueType_dataPointArray_invalid() throws DatastoreException, IOException
 	{
 		// Value is a map which is not valid
-		String json = "{\"name\": \"metric1\", \"datapoints\": [[1349109376, " + new HashMap() + "]], \"tags\":{\"foo\":\"bar\"}}";
+		String json = "{\"name\": \"metric1\", \"datapoints\": [[1349109376, " + new HashMap<>() + "]], \"tags\":{\"foo\":\"bar\"}}";
 
 		DataPointsParser parser = new DataPointsParser(publisher, new StringReader(json),
 				new Gson(), dataPointFactory);

@@ -20,7 +20,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import org.kairosdb.core.KairosRootConfig;
 import org.kairosdb.core.annotation.Feature;
 import org.kairosdb.core.annotation.FeatureComponent;
 import org.kairosdb.core.datapoints.DoubleDataPointFactory;
@@ -34,6 +33,7 @@ import org.kairosdb.plugin.Aggregator;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 @Feature(
 		name = "aggregators",
@@ -64,7 +64,7 @@ public class TestAggregatorFactory implements FeatureProcessingFactory<Aggregato
 			protected void configure()
 			{
 				bind(DoubleDataPointFactory.class).to(DoubleDataPointFactoryImpl.class);
-				bind(FilterEventBus.class).toInstance(new FilterEventBus(new EventBusConfiguration(new KairosRootConfig())));
+				bind(FilterEventBus.class).toInstance(new FilterEventBus(new EventBusConfiguration(new Properties())));
 
 				for (Class<?> aggregator : aggregators.values())
 				{
@@ -75,9 +75,9 @@ public class TestAggregatorFactory implements FeatureProcessingFactory<Aggregato
 	}
 
 	@SuppressWarnings("unchecked")
-	private void addAggregator(Class agg)
+	private void addAggregator(Class<?> agg)
 	{
-		String name = ((FeatureComponent)(agg.getAnnotation(FeatureComponent.class))).name();
+		String name = agg.getAnnotation(FeatureComponent.class).name();
 		aggregators.put(name, agg);
 	}
 

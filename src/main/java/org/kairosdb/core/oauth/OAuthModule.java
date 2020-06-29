@@ -17,9 +17,9 @@
 package org.kairosdb.core.oauth;
 
 import com.google.inject.servlet.ServletModule;
-import org.kairosdb.core.KairosRootConfig;
 
 import javax.inject.Singleton;
+import java.util.Properties;
 
 public class OAuthModule extends ServletModule
 {
@@ -27,16 +27,18 @@ public class OAuthModule extends ServletModule
 
 	private ConsumerTokenStore m_tokenStore;
 
-	public OAuthModule(KairosRootConfig props)
+	public OAuthModule(Properties props)
 	{
 		m_tokenStore = new ConsumerTokenStore();
 
-		for (String key : props)
+		for (Object key : props.keySet())
 		{
-			if (key.startsWith(CONSUMER_PREFIX))
+			String strKey = (String)key;
+
+			if (strKey.startsWith(CONSUMER_PREFIX))
 			{
-				String consumerKey = key.substring(CONSUMER_PREFIX.length());
-				String consumerToken = props.getProperty(key);
+				String consumerKey = strKey.substring(CONSUMER_PREFIX.length());
+				String consumerToken = (String)props.get(key);
 
 				m_tokenStore.addToken(consumerKey, consumerToken);
 			}

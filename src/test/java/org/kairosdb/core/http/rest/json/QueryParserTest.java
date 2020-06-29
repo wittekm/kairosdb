@@ -23,7 +23,6 @@ import org.joda.time.DateTimeZone;
 import org.junit.Before;
 import org.junit.Test;
 import org.kairosdb.core.KairosFeatureProcessor;
-import org.kairosdb.core.KairosRootConfig;
 import org.kairosdb.core.aggregator.*;
 import org.kairosdb.core.datapoints.DoubleDataPointFactoryImpl;
 import org.kairosdb.core.datastore.Duration;
@@ -42,6 +41,7 @@ import org.kairosdb.rollup.RollupTask;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Properties;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -56,7 +56,7 @@ public class QueryParserTest
 	public void setup() throws KairosDBException
 	{
 		parser = new QueryParser(new KairosFeatureProcessor(new TestAggregatorFactory(), new TestGroupByFactory()), new TestQueryPluginFactory());
-		eventBus = new FilterEventBus(new EventBusConfiguration(new KairosRootConfig()));
+		eventBus = new FilterEventBus(new EventBusConfiguration(new Properties()));
 	}
 
 	@Test
@@ -187,7 +187,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_cacheTime_invalid() throws IOException
+	public void test_cacheTime_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-cache-time.json"), Charsets.UTF_8);
 
@@ -195,7 +195,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_no_start_time_invalid() throws IOException
+	public void test_no_start_time_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-no-start_date.json"), Charsets.UTF_8);
 
@@ -217,7 +217,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_absoluteEndTime_before_startTime_invalid() throws IOException
+	public void test_absoluteEndTime_before_startTime_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-absoluteEndTime-less-than-startTime.json"), Charsets.UTF_8);
 
@@ -225,15 +225,15 @@ public class QueryParserTest
 	}
 
 		@Test
-		public void test_relativeEndTime_before_startTime_invalid() throws IOException
-		{
+	public void test_relativeEndTime_before_startTime_invalid() throws IOException, QueryException
+	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-relativeEndTime-less-than-startTime.json"), Charsets.UTF_8);
 
 		assertBeanValidation(json, "query.metric[0].end_time must be greater than the start time");
 	}
 
 	@Test
-	public void test_relativeStartTime_invalid() throws IOException
+	public void test_relativeStartTime_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-relative-startTime-value.json"), Charsets.UTF_8);
 
@@ -241,7 +241,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_relativeEndTime_invalid() throws IOException
+	public void test_relativeEndTime_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-relative-endTime-value.json"), Charsets.UTF_8);
 
@@ -249,7 +249,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_missingMetric_invalid() throws IOException
+	public void test_missingMetric_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-no-metric.json"), Charsets.UTF_8);
 
@@ -257,7 +257,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_emptyMetricName_invalid() throws IOException
+	public void test_emptyMetricName_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-empty-name.json"), Charsets.UTF_8);
 
@@ -265,7 +265,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_nullTagValueInArray_invalid() throws IOException
+	public void test_nullTagValueInArray_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("query-metric-null-tag-value-in-array.json"), Charsets.UTF_8);
 
@@ -273,7 +273,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_emptyTagName_invalid() throws IOException
+	public void test_emptyTagName_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-tag-empty-name.json"), Charsets.UTF_8);
 
@@ -281,7 +281,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_emptyTagValueInArray_invalid() throws IOException
+	public void test_emptyTagValueInArray_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-tag-empty-value-in-array.json"), Charsets.UTF_8);
 
@@ -289,7 +289,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_nullTagValue_invalid() throws IOException
+	public void test_nullTagValue_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("query-metric-null-tag-value.json"), Charsets.UTF_8);
 
@@ -297,7 +297,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_emptyTagValue_invalid() throws IOException
+	public void test_emptyTagValue_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-tag-empty-value.json"), Charsets.UTF_8);
 
@@ -305,7 +305,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_aggregator_missingName_invalid() throws IOException
+	public void test_aggregator_missingName_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-aggregators-no-name.json"), Charsets.UTF_8);
 
@@ -313,7 +313,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_aggregator_emptyName_invalid() throws IOException
+	public void test_aggregator_emptyName_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-aggregators-empty-name.json"), Charsets.UTF_8);
 
@@ -321,7 +321,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_aggregator_invalid() throws IOException
+	public void test_aggregator_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-aggregators.json"), Charsets.UTF_8);
 
@@ -329,7 +329,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_aggregator_sampling_value_invalid() throws IOException
+	public void test_aggregator_sampling_value_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-aggregators-sampling-value.json"), Charsets.UTF_8);
 
@@ -337,7 +337,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_aggregator_sampling_timezone_invalid() throws IOException
+	public void test_aggregator_sampling_timezone_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-aggregators-sampling-timezone.json"), Charsets.UTF_8);
 
@@ -353,7 +353,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_aggregator_div_no_divisor_invalid() throws IOException
+	public void test_aggregator_div_no_divisor_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-aggregators-div-no-divisor.json"), Charsets.UTF_8);
 
@@ -361,7 +361,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_aggregator_div_divisor_zero_invalid() throws IOException
+	public void test_aggregator_div_divisor_zero_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-aggregators-div-divisor-zero.json"), Charsets.UTF_8);
 
@@ -369,7 +369,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_aggregator_percentile_no_percentile_invalid() throws IOException
+	public void test_aggregator_percentile_no_percentile_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-aggregators-percentile-no-percentile.json"), Charsets.UTF_8);
 
@@ -377,7 +377,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_aggregator_percentile_percentile_zero_invalid() throws IOException
+	public void test_aggregator_percentile_percentile_zero_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-aggregators-percentile-percentile-zero.json"), Charsets.UTF_8);
 
@@ -385,7 +385,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_aggregator_percentile_percentile_numberFormat_invalid() throws IOException
+	public void test_aggregator_percentile_percentile_numberFormat_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-aggregators-percentile-percentile.json"), Charsets.UTF_8);
 
@@ -393,7 +393,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_aggregator_sampling_unit_invalid() throws IOException
+	public void test_aggregator_sampling_unit_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-aggregators-sampling-unit.json"), Charsets.UTF_8);
 
@@ -402,7 +402,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_groupby_missingName_invalid() throws IOException
+	public void test_groupby_missingName_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-group_by-no-name.json"), Charsets.UTF_8);
 
@@ -410,7 +410,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_groupby_emptyName_invalid() throws IOException
+	public void test_groupby_emptyName_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-group_by-empty-name.json"), Charsets.UTF_8);
 
@@ -418,7 +418,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_groupby_invalid() throws IOException
+	public void test_groupby_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-group_by.json"), Charsets.UTF_8);
 
@@ -426,7 +426,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_groupby_tag_missing_tags_invalid() throws IOException
+	public void test_groupby_tag_missing_tags_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-group_by-tag-missing-tags.json"), Charsets.UTF_8);
 
@@ -434,7 +434,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_groupby_tag_emtpy_tags_invalid() throws IOException
+	public void test_groupby_tag_emtpy_tags_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-group_by-tag-empty-tags.json"), Charsets.UTF_8);
 
@@ -442,7 +442,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_groupby_time_missing_range_size_invalid() throws IOException
+	public void test_groupby_time_missing_range_size_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-group_by-time-missing-range_size.json"), Charsets.UTF_8);
 
@@ -450,7 +450,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_groupby_time_range_size_value_invalid() throws IOException
+	public void test_groupby_time_range_size_value_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-group_by-time-range_size_value.json"), Charsets.UTF_8);
 
@@ -458,7 +458,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_groupby_time_range_size_unit_invalid() throws IOException
+	public void test_groupby_time_range_size_unit_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-group_by-time-range_size_unit.json"), Charsets.UTF_8);
 
@@ -466,7 +466,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_groupby_time_missing_group_count_invalid() throws IOException
+	public void test_groupby_time_missing_group_count_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-group_by-time-missing-group_count.json"), Charsets.UTF_8);
 
@@ -474,7 +474,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_groupby_value_range_size_invalid() throws IOException
+	public void test_groupby_value_range_size_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-query-metric-group_by-value-range_size.json"), Charsets.UTF_8);
 
@@ -482,7 +482,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_parseRollUpTask_empty_name_invalid() throws IOException
+	public void test_parseRollUpTask_empty_name_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-rollup-no-name-empty.json"), Charsets.UTF_8);
 
@@ -490,7 +490,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_parseRollUpTask_no_execution_interval_invalid() throws IOException
+	public void test_parseRollUpTask_no_execution_interval_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-rollup-no-execution_interval.json"), Charsets.UTF_8);
 
@@ -498,7 +498,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_parseRollUpTask_empty_saveAs_invalid() throws IOException
+	public void test_parseRollUpTask_empty_saveAs_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-rollup-no-saveAs.json"), Charsets.UTF_8);
 
@@ -510,7 +510,7 @@ public class QueryParserTest
 	 reuses parseQuery.
 	 */
 	@Test
-	public void test_parseRollUpTask_empty_query_time_invalid() throws IOException
+	public void test_parseRollUpTask_empty_query_time_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-rollup-no-query_time.json"), Charsets.UTF_8);
 
@@ -518,7 +518,7 @@ public class QueryParserTest
 	}
 
 	@Test
-	public void test_parseRollUpTask_noRangeAggregator_invalid() throws IOException
+	public void test_parseRollUpTask_noRangeAggregator_invalid() throws IOException, QueryException
 	{
 		String json = Resources.toString(Resources.getResource("invalid-rollup-no-range-aggregator.json"), Charsets.UTF_8);
 
@@ -541,7 +541,7 @@ public class QueryParserTest
 				1,
 				"kairosdb.http.query_time",
 				"kairosdb.http.query_time_rollup",
-				createTrimAggregator(TrimAggregator.Trim.BOTH),
+				createTrimAggregator(TrimAggregator.Trim.LAST),
 				createSaveAsAggregator(
 						"kairosdb.http.query_time_rollup",
 						ImmutableList.of("group1", "group2")),
@@ -573,7 +573,7 @@ public class QueryParserTest
 				1,
 				"kairosdb.http.query_time",
 				"kairosdb.http.query_time_rollup",
-				createTrimAggregator(TrimAggregator.Trim.BOTH),
+				createTrimAggregator(TrimAggregator.Trim.LAST),
 				createSaveAsAggregator(
 						"kairosdb.http.query_time_rollup",
 						ImmutableList.of("group1", "group2")),
@@ -585,7 +585,7 @@ public class QueryParserTest
 				1,
 				"kairosdb.http.foo",
 				"kairosdb.http.foo_rollup",
-				createTrimAggregator(TrimAggregator.Trim.BOTH),
+				createTrimAggregator(TrimAggregator.Trim.LAST),
 				createSaveAsAggregator(
 						"kairosdb.http.foo_rollup",
 						ImmutableList.of("group3", "group4")),

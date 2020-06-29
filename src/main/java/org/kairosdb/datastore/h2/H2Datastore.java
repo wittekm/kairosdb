@@ -16,7 +16,6 @@
 
 package org.kairosdb.datastore.h2;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -46,7 +45,6 @@ import org.kairosdb.datastore.h2.orm.MetricIdsWithTagsQuery;
 import org.kairosdb.datastore.h2.orm.MetricNamesPrefixQuery;
 import org.kairosdb.datastore.h2.orm.MetricNamesQuery;
 import org.kairosdb.datastore.h2.orm.MetricTag;
-import org.kairosdb.datastore.h2.orm.MetricTagValuesQuery;
 import org.kairosdb.datastore.h2.orm.ServiceIndex;
 import org.kairosdb.datastore.h2.orm.ServiceIndex_base;
 import org.kairosdb.datastore.h2.orm.ServiceModification;
@@ -75,13 +73,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.regex.Pattern;
-
-import static org.kairosdb.core.KairosConfigProperties.QUERIES_REGEX_PREFIX;
 
 public class H2Datastore implements Datastore, ServiceKeyStore
 {
@@ -91,18 +85,15 @@ public class H2Datastore implements Datastore, ServiceKeyStore
 	private Connection m_holdConnection;  //Connection that holds the database open
 	private final KairosDataPointFactory m_dataPointFactory;
 	private final Publisher<RowKeyEvent> m_rowKeyPublisher;
-	private final String m_regexPrefix;
 
 	@Inject
 	public H2Datastore(@Named(DATABASE_PATH_PROPERTY) String dbPath, 
 			KairosDataPointFactory dataPointFactory,
-			FilterEventBus eventBus,
-			@Named(QUERIES_REGEX_PREFIX) String regexPrefix) throws DatastoreException
+			FilterEventBus eventBus) throws DatastoreException
 	{
 		m_dataPointFactory = dataPointFactory;
 		m_rowKeyPublisher = eventBus.createPublisher(RowKeyEvent.class);
 		boolean createDB = false;
-		m_regexPrefix = regexPrefix;
 
 		File dataDir = new File(dbPath);
 		if (!dataDir.exists())
@@ -214,7 +205,7 @@ public class H2Datastore implements Datastore, ServiceKeyStore
 				}
 
 				GenOrmDataSource.flush();
-				DataPointsRowKey dataPointsRowKey = new DataPointsRowKey(metricName, "H2",
+				DataPointsRowKey dataPointsRowKey = new DataPointsRowKey(metricName,
 						0, dataPoint.getDataStoreDataType(), tags);
 				m_rowKeyPublisher.post(new RowKeyEvent(metricName, dataPointsRowKey, 0));
 
@@ -305,44 +296,14 @@ public class H2Datastore implements Datastore, ServiceKeyStore
 
 		GenOrmQueryResultSet<? extends MetricIdResults> idQuery;
 
-		HashMultimap<String, String> filterTags = HashMultimap.create();
-
-		//Check if any of the tags are regex
-		for (Map.Entry<String, String> tagPair : query.getTags().entries())
-		{
-			if (m_regexPrefix.length() != 0 && tagPair.getValue().startsWith(m_regexPrefix))
-			{
-				String regex = tagPair.getValue().substring(m_regexPrefix.length());
-
-				Pattern pattern = Pattern.compile(regex);
-
-				MetricTagValuesQuery.ResultSet resultSet = (new MetricTagValuesQuery(query.getName(), tagPair.getKey())).runQuery();
-				while (resultSet.next())
-				{
-					String tagValue = resultSet.getRecord().getTagValue();
-
-					if (pattern.matcher(tagValue).matches())
-						filterTags.put(tagPair.getKey(), tagValue);
-				}
-				resultSet.close();
-
-			}
-			else
-			{
-				filterTags.put(tagPair.getKey(), tagPair.getValue());
-			}
-		}
-
-		//todo query tags and values and run the regex over them placing results in to filterTags
-
 		//Manually build the where clause for the tags
 		//This is subject to sql injection
-		Set<String> filterTagNames = filterTags.keySet();
-		if (filterTagNames.size() != 0)
+		Set<String> filterTags = query.getTags().keySet();
+		if (filterTags.size() != 0)
 		{
 			sb.append(" and (");
 			boolean first = true;
-			for (String tag : filterTagNames)
+			for (String tag : filterTags)
 			{
 				if (!first)
 					sb.append(" or ");
@@ -351,7 +312,7 @@ public class H2Datastore implements Datastore, ServiceKeyStore
 				sb.append(" (mt.\"tag_name\" = '").append(tag);
 				sb.append("' and (");
 
-				Set<String> values = filterTags.get(tag);
+				Set<String> values = query.getTags().get(tag);
 				boolean firstValue = true;
 				for (String value : values)
 				{
@@ -368,7 +329,7 @@ public class H2Datastore implements Datastore, ServiceKeyStore
 
 			sb.append(") ");
 
-			idQuery = new MetricIdsWithTagsQuery(query.getName(), filterTagNames.size(),
+			idQuery = new MetricIdsWithTagsQuery(query.getName(), filterTags.size(),
 					sb.toString()).runQuery();
 		}
 		else

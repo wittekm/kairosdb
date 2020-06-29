@@ -7,7 +7,6 @@ import com.google.common.io.ByteStreams;
 import org.kairosdb.core.DataPoint;
 import org.kairosdb.core.KairosDataPointFactory;
 import org.kairosdb.events.DataPointEvent;
-import org.kairosdb.util.KDataInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,7 +61,7 @@ public class DataPointEventSerializer
 		DataPointEvent ret = null;
 		try
 		{
-			KDataInput dataInput = KDataInput.createInput(bytes);
+			ByteArrayDataInput dataInput = ByteStreams.newDataInput(bytes);
 			String metricName = dataInput.readUTF();
 			int ttl = dataInput.readInt();
 			long timestamp = dataInput.readLong();
@@ -80,7 +79,7 @@ public class DataPointEventSerializer
 			ret = new DataPointEvent(metricName, builder.build(), dataPoint, ttl);
 
 		}
-		catch (IOException | IllegalStateException e)
+		catch (IOException e)
 		{
 			logger.error("Unable to deserialize event", e);
 		}

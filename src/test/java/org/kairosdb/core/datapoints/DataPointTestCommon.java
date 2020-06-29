@@ -2,7 +2,6 @@ package org.kairosdb.core.datapoints;
 
 import org.junit.Test;
 import org.kairosdb.core.DataPoint;
-import org.kairosdb.util.KDataInputStream;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -37,7 +36,7 @@ public class DataPointTestCommon
 
 		double testSum = 0.0;
 
-		KDataInputStream dataInputStream = new KDataInputStream(
+		DataInputStream dataInputStream = new DataInputStream(
 				new ByteArrayInputStream(buffer.toByteArray()));
 
 		for (int i = 0; i < dataPointList.size(); i++)

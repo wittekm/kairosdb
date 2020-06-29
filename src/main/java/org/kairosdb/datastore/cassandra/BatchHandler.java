@@ -44,7 +44,6 @@ public class BatchHandler extends RetryCallable
 	private final CassandraModule.CQLBatchFactory m_cqlBatchFactory;
 	private final Publisher<RowKeyEvent> m_rowKeyPublisher;
 	private final Publisher<BatchReductionEvent> m_batchReductionPublisher;
-	private final String m_clusterName;
 
 	@Inject
 	public BatchHandler(
@@ -59,7 +58,6 @@ public class BatchHandler extends RetryCallable
 		m_events = events;
 		m_callBack = callBack;
 		m_defaultTtl = configuration.getDatapointTtl();
-		m_clusterName = configuration.getWriteCluster().getClusterName();
 		m_allignDatapointTtl = configuration.isAlignDatapointTtlWithTimestamp();
 		m_forceDefaultDatapointTtl = configuration.isForceDefaultDatapointTtl();
 		m_rowKeyCache = rowKeyCache;
@@ -122,7 +120,7 @@ public class BatchHandler extends RetryCallable
 
 			long rowTime = calculateRowTime(dataPoint.getTimestamp());
 
-			rowKey = new DataPointsRowKey(metricName, m_clusterName, rowTime, dataPoint.getDataStoreDataType(),
+			rowKey = new DataPointsRowKey(metricName, rowTime, dataPoint.getDataStoreDataType(),
 					tags);
 
 			//Write out the row key if it is not cached

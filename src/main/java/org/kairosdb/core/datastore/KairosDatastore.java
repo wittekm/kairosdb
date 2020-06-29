@@ -22,7 +22,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.kairosdb.core.DataPoint;
 import org.kairosdb.core.KairosDataPointFactory;
-import org.kairosdb.core.KairosPostConstructInit;
 import org.kairosdb.core.aggregator.LimitAggregator;
 import org.kairosdb.core.exception.DatastoreException;
 import org.kairosdb.core.groupby.GroupByResult;
@@ -56,7 +55,7 @@ import java.util.TreeSet;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-public class KairosDatastore implements KairosPostConstructInit
+public class KairosDatastore
 {
 	public static final Logger logger = LoggerFactory.getLogger(KairosDatastore.class);
 	public static final String QUERY_CACHE_DIR = "kairosdb.query_cache.cache_dir";
@@ -87,11 +86,7 @@ public class KairosDatastore implements KairosPostConstructInit
 
 		m_baseCacheDir = System.getProperty("java.io.tmpdir") + "/kairos_cache/";
 		m_keepCacheFiles = keepCacheFiles;
-	}
 
-	@Override
-	public void init()
-	{
 		setupCacheDirectory();
 	}
 
@@ -102,6 +97,7 @@ public class KairosDatastore implements KairosPostConstructInit
 		if (cacheTempDir != null && !cacheTempDir.equals(""))
 		{
 			m_baseCacheDir = cacheTempDir;
+			setupCacheDirectory();
 		}
 	}
 
