@@ -18,10 +18,12 @@ package org.kairosdb.integration;
 
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.tngtech.java.junit.dataprovider.DataProvider;
 import com.tngtech.java.junit.dataprovider.DataProviderRunner;
 import com.tngtech.java.junit.dataprovider.UseDataProvider;
@@ -48,6 +50,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
+import static org.junit.Assert.assertTrue;
 
 
 /*
@@ -63,6 +66,8 @@ List of tests we need to perform
 public class QueryIT
 {
 	private static final JsonParser parser = new JsonParser();
+	private static final Gson gson = new Gson();
+	private static final TypeToken<List<String>> stringListType = new TypeToken<List<String>>(){};
 
 	private String m_host = "127.0.0.1";
 	private String m_port = "8080";
@@ -272,9 +277,12 @@ public class QueryIT
 			assertThat(String.format("Missing tag: %s for test %s, query[%d], result[%d]",
 					tagName, testName, queryCount, resultCount),
 					actualTags.has(tagName), equalTo(true));
-			assertThat(String.format("Tag value different for key: %S for test %s, query[%d], result[%d]",
+
+			List<String> actualTagsList = gson.fromJson(actualTags.get(tagName), stringListType.getType());
+			List<String> expectedTagsList = gson.fromJson(tag.getValue(), stringListType.getType());
+			assertTrue(String.format("Tag value different for key: %S for test %s, query[%d], result[%d]",
 					tagName, testName, queryCount, resultCount),
-					actualTags.get(tagName), equalTo(tag.getValue()));
+					actualTagsList.containsAll(expectedTagsList) && expectedTagsList.containsAll(actualTagsList));
 		}
 	}
 
