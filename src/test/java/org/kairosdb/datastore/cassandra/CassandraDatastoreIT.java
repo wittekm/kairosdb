@@ -267,8 +267,6 @@ public class CassandraDatastoreIT extends DatastoreTestHelper
 		m_schema = new Schema(client, true);
 		Session session = m_schema.getSession();
 		BatchStats batchStats = new BatchStats();
-		DataCache<DataPointsRowKey> rowKeyCache = new DataCache<>(1024);
-		DataCache<String> metricNameCache = new DataCache<>(1024);
 
 		CassandraModule.CQLBatchFactory cqlBatchFactory = new CassandraModule.CQLBatchFactory()
 		{
@@ -293,9 +291,7 @@ public class CassandraDatastoreIT extends DatastoreTestHelper
 					@Override
 					public BatchHandler create(List<DataPointEvent> events, EventCompletionCallBack callBack, boolean fullBatch)
 					{
-						return new BatchHandler(events, callBack,
-								configuration, rowKeyCache, metricNameCache,
-								s_eventBus, cqlBatchFactory);
+						return new BatchHandler(events, callBack, configuration, s_eventBus, cqlBatchFactory);
 					}
 				},
 				new CassandraModule.DeleteBatchHandlerFactory()
