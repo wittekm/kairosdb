@@ -28,7 +28,7 @@
 	<packaging>jar</packaging>
 	<name>kairosdb</name>
 	<description>KairosDB is a fast distributed scalable time series abstraction on top of Cassandra.</description>
-	<version>1.3.0-SNAPSHOT</version>
+	<version>1.2.2-SNAPSHOT</version>
 
 	<licenses>
 		<license>
@@ -94,6 +94,7 @@
 		<codahale.version>3.0.2</codahale.version>
 		<dropwizard.metrics.version>3.2.2</dropwizard.metrics.version>
 		<genormous.version>1.6.4.jdbc41</genormous.version>
+		<gson.version>2.2.4</gson.version>
 		<guava.version>19.0</guava.version>
 		<guice.version>4.1.0</guice.version>
 		<guava.retrying.version>2.0.0</guava.retrying.version>
@@ -107,21 +108,18 @@
 		<jersey.version>1.18.3</jersey.version>
 		<jetty.version>8.1.16.v20140903</jetty.version>
 		<joda.time.version>2.3</joda.time.version>
-		<json.version>20180130</json.version>
+		<json.version>chargebee-1.0</json.version>
 		<jsr305.version>2.0.2</jsr305.version>
 		<logback.version>1.1.7</logback.version>
 		<lz4.version>1.3.0</lz4.version>
 		<netty.version>3.10.6.Final</netty.version>
 		<quartz.scheduler.version>2.1.7</quartz.scheduler.version>
-		<snappy.version>1.1.7.2</snappy.version>
-		<typesafe.config>1.3.1</typesafe.config>
 		<slf4j.version>1.7.2</slf4j.version>
 
 		<!--Test dependency versions-->
 		<assertj.version>3.11.1</assertj.version>
 		<hamcrest.version>1.3</hamcrest.version>
 		<junit.version>4.12</junit.version>
-		<gson.version>2.2.4</gson.version>
 		<mockito.version>2.13.0</mockito.version>
 		<testng.version>6.8.5</testng.version>
 
@@ -206,7 +204,6 @@
 				<!-- TODO(ville): Relocate resources to support testing -->
 				<configuration>
 					<excludes>
-						<exclude>kairosdb.properties</exclude>
 						<exclude>logback.xml</exclude>
 					</excludes>
 				</configuration>
@@ -289,6 +286,7 @@
 							<filesets>
 								<fileset>
 									<directory>${project.build.directory}/docker-assembly</directory>
+									<directory>${project.build.directory}/appassembler</directory>
 								</fileset>
 							</filesets>
 						</configuration>
@@ -756,7 +754,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.json</groupId>
-			<artifactId>json</artifactId>
+			<artifactId>org.json</artifactId>
 			<version>${json.version}</version>
 		</dependency>
 		<dependency>
@@ -768,16 +766,6 @@
 			<groupId>se.ugli.bigqueue</groupId>
 			<artifactId>bigqueue</artifactId>
 			<version>${bigqueue.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.typesafe</groupId>
-			<artifactId>config</artifactId>
-			<version>${typesafe.config}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.xerial.snappy</groupId>
-			<artifactId>snappy-java</artifactId>
-			<version>${snappy.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.beust</groupId>

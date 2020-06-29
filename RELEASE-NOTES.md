@@ -23,11 +23,9 @@ KairosDb Release Notes
       * Top level directory is no longer `kairosdb`
       * Configuration is in `./config` instead of `./kairosdb/conf`
       * `logback.xml` is in `./config` instead of `./kairosdb/conf/logging`
-      * Includes `kairosdb.properties` (Java Properties) instead of `kairosdb.properties` (HOCON) for parity with Docker image
       * No longer ships with `check-log-errors.sh`, `create_hbase_table.sh`, `kairosdb-service.sh` or `kairosdb.bat` in `bin`
    * RPM:
-      * Packaged in the same way as other Inscope Metrics services
-      * Includes `kairosdb.properties` (Java Properties) instead of `kairosdb.properties` (HOCON) for parity with Docker image
+      * Packaged with the standard Inscope Metrics launch scripts.
 * Other changes:
   * Extensions should be added to `./lib/ext` regardless of distribution
   * The packaged configuration files place H2DB files in `./h2db` instead of `build/h2db`

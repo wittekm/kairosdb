@@ -130,7 +130,7 @@ public class ExportTest
 	{
 		verifyDataPoints();
 
-		Writer ps = new OutputStreamWriter(new FileOutputStream("build/export.json"), "UTF-8");
+		Writer ps = new OutputStreamWriter(new FileOutputStream("target/export.json"), "UTF-8");
 		s_main.runExport(ps, Collections.singletonList(METRIC_NAME));
 		ps.flush();
 		ps.close();
@@ -152,7 +152,7 @@ public class ExportTest
 
 		query.close();
 
-		InputStream export = new FileInputStream("build/export.json");
+		InputStream export = new FileInputStream("target/export.json");
 
 		s_main.runImport(export);
 
