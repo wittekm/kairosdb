@@ -1,35 +1,47 @@
 package org.kairosdb.core.reporting;
 
 import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.name.Names;
 import com.google.inject.servlet.ServletModule;
+import org.assertj.core.util.Lists;
+import org.junit.After;
 import org.junit.Test;
-import org.kairosdb.core.http.rest.ResourceBase;
+
+import java.util.ArrayList;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.equalTo;
 
 
-public class ThreadReporterTest extends ResourceBase {
+public class ThreadReporterTest {
     @Test
-    public void testInjection() throws Exception
+    public void testInjectionWhenTtlSpecified() throws Exception
     {
-        Injector injector = Guice.createInjector(new ServletModule() {
+        final ArrayList<Integer> ttls = Lists.newArrayList(12345, 0, 20);
+        for (final int ttl : ttls) {
+            // given
+            injectorWithTtl(ttl);
+            // when
+            final ThreadReporter.ReporterDataPoint dataPoint = ThreadReporter.addDataPoint("metric name", "value");
+            // then
+            assertThat(dataPoint.getTtl(), equalTo(ttl));
+        }
+    }
+
+    @After
+    public void afterEachTest() {
+        injectorWithTtl(0);
+    }
+
+    private void injectorWithTtl(final Integer ttl) {
+        Guice.createInjector(new ServletModule() {
             @Override
             protected void configureServlets() {
-                bind(Integer.TYPE).annotatedWith(Names.named("kairosdb.reporter.ttl")).toInstance(12345);
+                if (ttl != null) {
+                    bind(Integer.TYPE).annotatedWith(Names.named("kairosdb.reporter.ttl")).toInstance(ttl);
+                }
                 requestStaticInjection(ThreadReporter.class);
             }
         });
-        injector.getAllBindings();
-        System.out.println(injector.getAllBindings().toString());
-
-        // when
-        final ThreadReporter.ReporterDataPoint dataPoint = ThreadReporter.addDataPoint("metric name", "value");
-
-        // then
-        assertThat(dataPoint.getTtl(), greaterThan(0));
-
     }
 }
