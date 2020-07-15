@@ -13,15 +13,15 @@ public class PropertiesValidator {
     // Field DI is not ideal, but you can't provide defaults with constructor DI.
     @Inject(optional = true)
     @Named(Props.ALIGN_DATAPOINT_TTL_WITH_TIMESTAMP)
-    private final boolean m_alignDatapointTtlWithTimestamp = false;
+    private boolean m_alignDatapointTtlWithTimestamp = false;
 
     @Inject(optional = true)
     @Named(Props.REPORTER_TTL)
-    private final int m_reporterTtl = 0;
+    private int m_reporterTtl = 0;
 
     @Inject(optional = true)
     @Named(Props.CASSANDRA_DATAPOINT_TTL)
-    private final int m_cassandraDatapointTtl = 0;
+    private int m_cassandraDatapointTtl = 0;
 
     public void validate() throws KairosDBException {
         validateSelfReportingTtlsWorkWithAlignment();
