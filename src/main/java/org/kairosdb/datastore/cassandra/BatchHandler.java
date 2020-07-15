@@ -79,8 +79,6 @@ public class BatchHandler extends RetryCallable
 			count++;
 
 			String metricName = event.getMetricName();
-				/*if (metricName.startsWith("blast"))
-					continue;*/
 
 			ImmutableSortedMap<String, String> tags = event.getTags();
 			DataPoint dataPoint = event.getDataPoint();
@@ -106,11 +104,11 @@ public class BatchHandler extends RetryCallable
 				
 				// the resulting aligned ttl is the former calculated ttl minus the datapoint's age
 				ttl = ttl - datapointAgeInSeconds;
-				logger.trace("alligned ttl (seconds): {}", ttl);
+				logger.trace("aligned ttl (seconds): {}", ttl);
 				// if the aligned ttl is negative, the datapoint is already dead
 				if (ttl <= 0)
 				{
-			        logger.warn("alligned ttl for {} with tags {} is negative, so the datapoint is already dead, no need to store it", metricName, tags);
+			        logger.warn("aligned ttl for {} with tags {} is negative, so the datapoint is already dead, no need to store it", metricName, tags);
 			        continue;
 				}
 			}
@@ -174,9 +172,6 @@ public class BatchHandler extends RetryCallable
 				while (events.hasNext())
 				{
 					CQLBatch batch = m_cqlBatchFactory.create();
-
-					/*CQLBatch batch = new CQLBatch(m_consistencyLevel, m_session, m_schema,
-							m_batchStats, m_loadBalancingPolicy);*/
 
 					loadBatch(limit, batch, events);
 
