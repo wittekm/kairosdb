@@ -42,7 +42,7 @@ public class ThreadReporter
 {
 	private static final String REPORTER_TTL_KEY = "kairosdb.reporter.ttl";
 
-	@Inject
+	@Inject(optional = true)
 	@Named(REPORTER_TTL_KEY)
 	private static int DEFAULT_REPORTER_TTL = 0;
 
