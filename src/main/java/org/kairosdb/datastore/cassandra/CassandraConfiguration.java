@@ -191,10 +191,8 @@ public class CassandraConfiguration
 	public void setHostList(@Named(HOST_LIST_PROPERTY) String hostList)
 	{
 		Iterable<String> strHostList = HostSplitter.split(hostList);
-		System.out.println("KOSKELA: hostlist=" + hostList);
 		for (String hostEntry : strHostList)
 		{
-			System.out.println("KOSKELA: " + hostEntry);
 			Iterator<String> hostPort = PortSplitter.split(hostEntry).iterator();
 
 			String host = hostPort.next();

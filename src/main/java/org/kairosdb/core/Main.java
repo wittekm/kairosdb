@@ -204,7 +204,6 @@ public class Main
 
 		for (String name : System.getProperties().stringPropertyNames())
 		{
-			System.out.println("KOSKELA: Set " + name + " to " + System.getProperty(name));
 			props.setProperty(name, System.getProperty(name));
 		}
 
