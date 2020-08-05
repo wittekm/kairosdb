@@ -33,8 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class DataCache<T>
 {
-	private final Object m_lock = new Object();
-
 	private final LinkItem<T> m_front = new LinkItem<T>(null);
 	private final LinkItem<T> m_back = new LinkItem<T>(null);
 
@@ -68,49 +66,63 @@ public class DataCache<T>
 	}
 
 	/**
-	 returns null if item was not in cache.  If the return is not null the item
+	 returns null if item is not in cache.  If the return is not null the item
 	 from the cache is returned.
 
 	 @param cacheData
 	 @return
 	 */
-	public T cacheItem(T cacheData)
+	public synchronized T get(T cacheData)
 	{
-		LinkItem<T> mappedItem = null;
+		final LinkItem<T> mappedItem = getMappedItemAndUpdateLRU(cacheData);
 
-		synchronized (m_lock)
-		{
-			LinkItem<T> li = new LinkItem<T>(cacheData);
-			mappedItem = m_hashMap.putIfAbsent(cacheData, li);
-
-			if (mappedItem != null)
-			{
-				//moves item to top of list
-				remove(mappedItem);
-				addItem(mappedItem);
-			}
-			else
-				addItem(li);
-
-			if (m_hashMap.size() > m_maxSize)
-			{
-				LinkItem<T> last = m_back.m_prev;
-				remove(last);
-
-				m_hashMap.remove(last.m_data);
-			}
-		}
+		pruneCache();
 
 		return (mappedItem == null ? null : mappedItem.m_data);
 	}
 
-	private void remove(LinkItem<T> li)
+	private synchronized LinkItem<T> getMappedItemAndUpdateLRU(T cacheData) {
+		final LinkItem<T> mappedItem = m_hashMap.get(cacheData);
+
+		if (mappedItem != null)
+		{
+			//moves item to top of list
+			removeLRUItem(mappedItem);
+			addLRUItem(mappedItem);
+		}
+
+		return mappedItem;
+	}
+
+
+	public synchronized void put(final T cacheData) {
+		final LinkItem<T> existing = m_hashMap.get(cacheData);
+		if (existing != null) {
+			return;
+		}
+
+		final LinkItem<T> li = new LinkItem<>(cacheData);
+		addLRUItem(li);
+		m_hashMap.put(cacheData, li);
+		pruneCache();
+	}
+
+	private synchronized void pruneCache() {
+		while (m_hashMap.size() > m_maxSize) {
+			LinkItem<T> last = m_back.m_prev;
+			removeLRUItem(last);
+
+			m_hashMap.remove(last.m_data);
+		}
+	}
+
+	private synchronized void removeLRUItem(LinkItem<T> li)
 	{
 		li.m_prev.m_next = li.m_next;
 		li.m_next.m_prev = li.m_prev;
 	}
 
-	private void addItem(LinkItem<T> li)
+	private synchronized void addLRUItem(LinkItem<T> li)
 	{
 		li.m_prev = m_front;
 		li.m_next = m_front.m_next;
@@ -119,29 +131,23 @@ public class DataCache<T>
 		li.m_next.m_prev = li;
 	}
 
-	public Set<T> getCachedKeys()
+	public synchronized Set<T> getCachedKeys()
 	{
 		return (m_hashMap.keySet());
 	}
 
-	public void removeKey(T key)
+	public synchronized void removeKey(T key)
 	{
-		synchronized (m_lock)
-		{
-			LinkItem<T> li = m_hashMap.remove(key);
-			if (li != null)
-				remove(li);
-		}
+        LinkItem<T> li = m_hashMap.remove(key);
+        if (li != null)
+            removeLRUItem(li);
 	}
 
-	public void clear()
+	public synchronized void clear()
 	{
-		synchronized (m_lock)
-		{
-			m_front.m_next = m_back;
-			m_back.m_prev = m_front;
+        m_front.m_next = m_back;
+        m_back.m_prev = m_front;
 
-			m_hashMap.clear();
-		}
+        m_hashMap.clear();
 	}
 }
