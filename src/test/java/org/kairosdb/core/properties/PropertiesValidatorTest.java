@@ -8,6 +8,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.kairosdb.core.exception.KairosDBException;
+import org.kairosdb.core.reporting.MetricReporterService;
+import org.kairosdb.datastore.cassandra.CassandraConfiguration;
 
 import java.util.Optional;
 
@@ -36,6 +38,18 @@ public class PropertiesValidatorTest {
     }
 
     @Test
+    public void test_invalidDatapointTtl_ValidatorFails() throws KairosDBException {
+        exceptionRule.expect(KairosDBException.class);
+        exceptionRule.expectMessage("to a non-zero value");
+
+        ValidatorArgs args = new ValidatorArgs();
+        args.alignDatapointTtlWithTimestamp = Optional.of(true);
+        args.forceDefaultDatapointTtl = Optional.of(true);
+
+        validatorWithInjection(args).validate();
+    }
+
+    @Test
     public void test_WhenAlignOff_ValidatorSucceeds() throws KairosDBException {
         ValidatorArgs args = new ValidatorArgs();
         args.reporterTtl = Optional.of(SOME_POSITIVE_INT);
@@ -59,15 +73,19 @@ public class PropertiesValidatorTest {
             @Override
             protected void configure() {
                 args.alignDatapointTtlWithTimestamp.ifPresent(val -> bind(Boolean.TYPE)
-                        .annotatedWith(Names.named(Props.ALIGN_DATAPOINT_TTL_WITH_TIMESTAMP))
+                        .annotatedWith(Names.named(CassandraConfiguration.ALIGN_DATAPOINT_TTL_WITH_TIMESTAMP))
+                        .toInstance(val)
+                );
+                args.forceDefaultDatapointTtl.ifPresent(val -> bind(Boolean.TYPE)
+                        .annotatedWith(Names.named(CassandraConfiguration.FORCE_DEFAULT_DATAPOINT_TTL))
                         .toInstance(val)
                 );
                 args.reporterTtl.ifPresent(val -> bind(Integer.TYPE)
-                        .annotatedWith(Names.named(Props.REPORTER_TTL))
+                        .annotatedWith(Names.named(MetricReporterService.REPORTER_TTL))
                         .toInstance(val)
                 );
                 args.cassandraDatapointTtl.ifPresent(val -> bind(Integer.TYPE)
-                        .annotatedWith(Names.named(Props.CASSANDRA_DATAPOINT_TTL))
+                        .annotatedWith(Names.named(CassandraConfiguration.DATAPOINT_TTL))
                         .toInstance(val)
                 );
             }
@@ -78,6 +96,7 @@ public class PropertiesValidatorTest {
     private static class ValidatorArgs {
         // a struct! in java? sacrilege
         Optional<Boolean> alignDatapointTtlWithTimestamp = Optional.empty();
+        Optional<Boolean> forceDefaultDatapointTtl = Optional.empty();
         Optional<Integer> reporterTtl = Optional.empty();
         Optional<Integer> cassandraDatapointTtl = Optional.empty();
     }

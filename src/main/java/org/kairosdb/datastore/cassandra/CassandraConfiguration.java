@@ -22,7 +22,9 @@ public class CassandraConfiguration
 	public static final String DATAPOINT_TTL = "kairosdb.datastore.cassandra.datapoint_ttl";
 	
 	public static final String ALIGN_DATAPOINT_TTL_WITH_TIMESTAMP = "kairosdb.datastore.cassandra.align_datapoint_ttl_with_timestamp";
+	public static final boolean ALIGN_DATAPOINT_TTL_WITH_TIMESTAMP_DEFAULT = false;
 	public static final String FORCE_DEFAULT_DATAPOINT_TTL = "kairosdb.datastore.cassandra.force_default_datapoint_ttl";
+	public static final boolean FORCE_DEFAULT_DATAPOINT_TTL_DEFAULT = false;
 
 	public static final String ROW_KEY_CACHE_SIZE_PROPERTY = "kairosdb.datastore.cassandra.row_key_cache_size";
 	public static final String STRING_CACHE_SIZE_PROPERTY = "kairosdb.datastore.cassandra.string_cache_size";
@@ -71,11 +73,11 @@ public class CassandraConfiguration
 
 	@Inject(optional = true)
 	@Named(ALIGN_DATAPOINT_TTL_WITH_TIMESTAMP)
-	private boolean m_alignDatapointTtlWithTimestamp = false;
+	private boolean m_alignDatapointTtlWithTimestamp = ALIGN_DATAPOINT_TTL_WITH_TIMESTAMP_DEFAULT;
 	
 	@Inject(optional = true)
 	@Named(FORCE_DEFAULT_DATAPOINT_TTL)
-	private boolean m_forceDefaultDatapointTtl = false;
+	private boolean m_forceDefaultDatapointTtl = FORCE_DEFAULT_DATAPOINT_TTL_DEFAULT;
 
 	@Inject
 	@Named(ROW_KEY_CACHE_SIZE_PROPERTY)
